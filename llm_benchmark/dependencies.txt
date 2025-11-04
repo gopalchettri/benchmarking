@@ -1,0 +1,16 @@
+
+
+# Create project
+uv init llm-benchmarking-poc
+cd llm-benchmarking-poc
+
+# initialize the project
+uv init
+
+# Add dependencies
+uv add fastapi uvicorn azure-ai-evaluation azure-identity
+uv add openai langchain langchain-community
+# uv add pymongo mysql-connector-python neo4j
+uv add docling pandas numpy pydantic
+uv add pytest pytest-asyncio httpx
+uv pip install pymongo motor pymysql neo4j python-dotenv

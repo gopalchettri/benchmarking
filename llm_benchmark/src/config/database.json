@@ -1,0 +1,20 @@
+{
+
+  "mongodb": {
+    "connection_string": "mongodb+srv://sa01:Pa%24sw0rd%21%2354321@llmmongoserver01.mongocluster.cosmos.azure.com/?tls=true&authMechanism=SCRAM-SHA-256&retrywrites=false&maxIdleTimeMS=120000",
+    "database": "llm_benchmark"
+  },
+  "mysql": {
+    "host": "llmmysqlserver01.mysql.database.azure.com",
+    "port": 3306,
+    "db": "llm_benchmark",
+    "username": "adminuser01",
+    "password": "Pa$sw0rd!#54321",
+    "ssl": true
+  },
+  "neo4j": {
+    "uri": "neo4j+s://<neo4j-host>.databases.neo4j.io",
+    "username": "<neo4j-username>",
+    "password": "<neo4j-password>"
+  }
+}

@@ -1,0 +1,1 @@
+# Standalone report generation from stored results

@@ -1,0 +1,32 @@
+[
+  {
+    "name": "phi-4",
+    "api_url": "https://phi4.azurewebsites.net/api/generate",
+    "auth_token": "phi4-token"
+  },
+  {
+    "name": "falcon-2",
+    "api_url": "https://falcon2.azurewebsites.net/api/generate",
+    "auth_token": "falcon2-token"
+  },
+  {
+    "name": "gpt-oss-20b",
+    "api_url": "https://gptoss20b.azurewebsites.net/api/generate",
+    "auth_token": "gptoss-token"
+  },
+  {
+    "name": "llama-3.2-vision",
+    "api_url": "https://llama32.azurewebsites.net/api/generate",
+    "auth_token": "llama32-token"
+  },
+  {
+    "name": "jais-13b",
+    "api_url": "https://jais13b.azurewebsites.net/api/generate",
+    "auth_token": "jais-token"
+  },
+  {
+    "name": "k2-think-32b",
+    "api_url": "https://k2think32b.azurewebsites.net/api/generate",
+    "auth_token": "k2think-token"
+  }
+]
