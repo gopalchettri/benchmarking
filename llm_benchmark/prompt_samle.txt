@@ -63,3 +63,61 @@ async def get_criteria_prompt(control: str, subcontrol: str, framework: str) -> 
         f"Output ONLY the JSON array above with {framework} {control} {subcontrol} criteria. No additional text."
     )
 
+async def get_system_prompt(framework: str) -> str:
+    """
+    Universal system prompt optimized for all benchmark models.
+    Balanced complexity for fair comparison.
+    """
+    return (
+        f"You are an expert cybersecurity compliance auditor specializing in {framework} standards.\n\n"
+        f"Your task is to generate compliance evaluation criteria in strict JSON format.\n\n"
+        f"OUTPUT REQUIREMENTS:\n"
+        f"- Return ONLY a valid JSON array\n"
+        f"- No markdown code blocks\n"
+        f"- No explanations or additional text\n"
+        f"- Each criterion must be clear, measurable, and actionable\n"
+        f"- Each criterion must address both design-level and implementation-level verification\n"
+    )
+async def get_criteria_prompt(control: str, subcontrol: str, framework: str) -> str:
+    """
+    Universal user prompt for benchmarking all models.
+    Optimized for clarity, consistency, and fair evaluation.
+    """
+    return (
+        f"Framework: {framework}\n"
+        f"Control: {control}\n"
+        f"Subcontrol: {subcontrol}\n\n"
+        
+        f"Task: Generate exactly 3 compliance evaluation criteria.\n\n"
+        
+        f"Each criterion must:\n"
+        f"1. Be clear and measurable\n"
+        f"2. Focus on policy-level compliance (not technical implementation details)\n"
+        f"3. Include a brief title (3-5 words)\n"
+        f"4. State the core requirement\n"
+        f"5. Specify design-level verification (what to check in documentation/plans)\n"
+        f"6. Specify implementation-level verification (what to check in production systems)\n\n"
+        
+        f"Combine all parts into ONE continuous sentence per criterion.\n\n"
+        
+        f"EXAMPLE OUTPUT:\n"
+        f"[\n"
+        f"  {{\n"
+        f"    \"id\": 1,\n"
+        f"    \"criteria\": \"Access Control Matrix - Define comprehensive role-based permissions for all system resources. Verify that design documentation includes detailed permission matrix with role definitions. Validate that production systems enforce the defined permissions with quarterly access reviews.\"\n"
+        f"  }},\n"
+        f"  {{\n"
+        f"    \"id\": 2,\n"
+        f"    \"criteria\": \"Multi-Factor Authentication Policy - Implement MFA for all privileged accounts and remote access. Confirm that security architecture specifies MFA mechanisms and enrollment procedures. Verify MFA is configured on all access points with monitoring for authentication anomalies.\"\n"
+        f"  }},\n"
+        f"  {{\n"
+        f"    \"id\": 3,\n"
+        f"    \"criteria\": \"Security Audit Logging - Maintain comprehensive tamper-evident logs for all security events. Review logging strategy documentation covering log sources and retention requirements. Validate production logging captures required events with integrity controls and real-time monitoring.\"\n"
+        f"  }}\n"
+        f"]\n\n"
+        
+        f"Generate 3 criteria for {framework} {control} {subcontrol}.\n"
+        f"Return only the JSON array. No explanations."
+    )
+
+
