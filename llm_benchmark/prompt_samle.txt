@@ -1,0 +1,21 @@
+def get_criteria_prompt(control: str, subcontrol: str, framework: str) -> str:
+    return (
+        f'Control: {control}\n'
+        f'Subcontrol: {subcontrol}\n\n'
+        "Generate exactly three evaluation criteria for compliance assessment. "
+        "Each criterion must be testable and actionable. "
+        "Return ONLY a JSON array of three objects with this schema:\n\n"
+        '[\n'
+        '  {\n'
+        '    "id": 1,                         # integer\n'
+        '    "criterion": "short title",     # short sentence\n'
+        '    "description": "one-paragraph detailed requirement",\n'
+        '    "design_level": "what to look for at design level (short)",\n'
+        '    "implementation_level": "what to look for at implementation level (short)",\n'
+        '    "evidence_examples": ["e.g. meeting minutes", "e.g. list of parties"]\n'
+        '  },\n'
+        '  ... (total 3 objects)\n'
+        ']\n\n'
+        "Do not include any explanation, headings, markdown, or extra text. "
+        "Do not output fewer or more than three objects."
+    )
