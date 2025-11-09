@@ -121,3 +121,100 @@ async def get_criteria_prompt(control: str, subcontrol: str, framework: str) -> 
     )
 
 
+
+import json
+import re
+import logging
+from typing import List, Dict, Optional
+
+logger = logging.getLogger(__name__)
+
+async def extract_and_convert_llm_json_criteria_tolist(json_text: str) -> List[str]:
+    """
+    Production-grade JSON extraction with multi-level error recovery.
+    Handles escaped characters, markdown blocks, and malformed JSON.
+    """
+    if not json_text or json_text.strip() == "":
+        logger.warning("Empty JSON text received")
+        return []
+    
+    # Step 1: Clean markdown code blocks
+    cleaned = re.sub(r'```(?:json)?\s*|\s*```
+    
+    # Step 2: Handle literal escaped characters (the core issue from Image 1)
+    if '\\n' in cleaned or '\\"' in cleaned:
+        logger.info("Detected escaped characters, unescaping...")
+        # Replace literal \n with space, \" with "
+        cleaned = cleaned.replace('\\n', ' ').replace('\\"', '"').replace('\\\\', '\\')
+    
+    # Step 3: Try to extract JSON array if embedded in text
+    json_match = re.search(r'$$\s*\{.*?\}\s*$$', cleaned, re.DOTALL)
+    if json_match:
+        cleaned = json_match.group(0)
+    
+    # Step 4: Attempt parsing with error handling
+    try:
+        data = json.loads(cleaned)
+        
+        # Validate structure
+        if not isinstance(data, list):
+            logger.error(f"Expected list, got {type(data)}")
+            return []
+        
+        # Extract criteria with validation
+        criteria_list = []
+        for idx, item in enumerate(data):
+            if not isinstance(item, dict):
+                logger.warning(f"Item {idx} is not a dict, skipping")
+                continue
+            
+            if "criteria" not in item:
+                logger.warning(f"Item {idx} missing 'criteria' field")
+                continue
+            
+            criteria_list.append(item["criteria"])
+        
+        logger.info(f"Successfully extracted {len(criteria_list)} criteria")
+        return criteria_list
+    
+    except json.JSONDecodeError as e:
+        logger.error(f"JSON decode failed at position {e.pos}: {e.msg}")
+        logger.error(f"Problematic text (first 300 chars): {cleaned[:300]}")
+        
+        # Recovery attempt: try fixing common JSON errors
+        return attempt_json_recovery(cleaned)
+    
+    except Exception as e:
+        logger.exception(f"Unexpected error during JSON extraction: {e}")
+        return []
+
+
+def attempt_json_recovery(malformed_json: str) -> List[str]:
+    """
+    Attempt to recover from malformed JSON using heuristics.
+    """
+    logger.info("Attempting JSON recovery...")
+    
+    try:
+        # Strategy 1: Fix unescaped quotes in criteria values
+        # Look for patterns like: "criteria": "Text with "nested" quotes"
+        fixed = re.sub(
+            r'("criteria":\s*")([^"]*?)("(?:[^"]*?)")([^"]*?)(")',
+            lambda m: f'{m.group(1)}{m.group(2)}{m.group(3).replace(\'"\', \'\\\\"\')}' \
+                      f'{m.group(4)}{m.group(5)}',
+            malformed_json
+        )
+        
+        # Strategy 2: Remove trailing commas before closing brackets
+        fixed = re.sub(r',(\s*[}$$])', r'\1', fixed)
+        
+        # Strategy 3: Try parsing again
+        data = json.loads(fixed)
+        if isinstance(data, list):
+            return [item.get("criteria", "") for item in data if isinstance(item, dict)]
+    
+    except Exception as e:
+        logger.warning(f"JSON recovery failed: {e}")
+    
+    return []
+
