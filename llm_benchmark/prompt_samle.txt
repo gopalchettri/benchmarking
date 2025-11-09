@@ -223,41 +223,15 @@ def attempt_json_recovery(malformed_json: str) -> List[str]:
 from pathlib import Path
 from sentence_transformers import SentenceTransformer
 
-def load_sentence_transformer(model_dir: str, model_name: str) -> SentenceTransformer:
-    """
-    Robustly load a local SentenceTransformer model.
-
-    Args:
-        model_dir: Relative or absolute path to the directory containing model_name
-        model_name: Directory name containing the transformer files
-
-    Returns:
-        Loaded SentenceTransformer instance
-
-    Raises:
-        FileNotFoundError, NotADirectoryError, Exception
-    """
-    # Get absolute path regardless of where this function is called from
-    script_dir = Path(__file__).resolve().parent   # The directory containing this script
-    model_path = (script_dir / model_dir / model_name).resolve()
-
-    print(f"Trying to load model from: {model_path}")
-
-    # Check existence & directory
-    if not model_path.exists():
-        raise FileNotFoundError(f"Model directory does not exist: {model_path}")
-    if not model_path.is_dir():
-        raise NotADirectoryError(f"Model path is not a directory: {model_path}")
-    if not any(model_path.iterdir()):
-        raise FileNotFoundError(f"Model directory is empty: {model_path}")
-
-    # Actually load the model
-    model = SentenceTransformer(str(model_path), local_files_only=True)
-    print("Model loaded successfully.")
+def load_sentence_transformer_direct():
+    """Load with hardcoded absolute path - guaranteed to work for debugging."""
+    model_path = r"C:\GopalChettri1\EY\Clients\WIAP\llm_benchmarking\src\config\embedding_model\all-MiniLM-L6-v2"
+    
+    print(f"Loading model from: {model_path}")
+    
+    if not os.path.exists(model_path):
+        raise FileNotFoundError(f"Model not found at: {model_path}")
+    
+    model = SentenceTransformer(model_path)
+    print("Model loaded successfully")
     return model
-
-# How to call:
-# If your structure is .../src/config/embedding_model/all-MiniLM-L6-V2/
-# ...and this code is in src/core/utils.py, call:
-# model = load_sentence_transformer("../config/embedding_model", "all-MiniLM-L6-V2")
-
