@@ -19,3 +19,24 @@ def get_criteria_prompt(control: str, subcontrol: str, framework: str) -> str:
         "Do not include any explanation, headings, markdown, or extra text. "
         "Do not output fewer or more than three objects."
     )
+
+def get_criteria_prompt(control: str, subcontrol: str, framework: str) -> str:
+    return (
+        f"Control: {control}\n"
+        f"Subcontrol: {subcontrol}\n\n"
+        "Generate exactly three clear, actionable evaluation criteria for compliance assessment. "
+        "Each criterion must be a single, natural-sounding string that contains: "
+        "(1) a short title, (2) a short description of the requirement, "
+        "and then two short sentences describing what to check at design level and at implementation level. "
+        "Do NOT include the labels 'Design Level' or 'Implementation Level' — just include the sentences in order. "
+        "Return ONLY a valid JSON array of three objects in this exact format:\n\n"
+        "[\n"
+        "  {\n"
+        "    \"id\": 1,\n"
+        "    \"criterion\": \"<Title — short description. design-level sentence. implementation-level sentence.>\"\n"
+        "  },\n"
+        "  { \"id\": 2, \"criterion\": \"...\" },\n"
+        "  { \"id\": 3, \"criterion\": \"...\" }\n"
+        "]\n\n"
+        "Do not include explanation, examples, or any extra fields. Use concise, accurate language and ensure each criterion makes sense."
+    )
