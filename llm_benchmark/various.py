@@ -69,3 +69,48 @@ async def get_criteria_prompt(control: str, subcontrol: str, framework: str) -> 
         f"Generate 3 criteria for {framework} {control} {subcontrol}.\n"
         f"Return only the JSON array as shown in the example above."
     )
+
+# src/core/utils.py (or wherever you keep utility functions)
+
+import json
+import re
+
+def extract_json_from_markdown(text: str):
+    """
+    Extracts and parses JSON from LLM responses that may be wrapped in markdown.
+    Handles:
+    - Markdown code blocks (``````)
+    - Plain JSON strings
+    - Already-parsed Python objects
+    """
+    # If already parsed, return as-is
+    if isinstance(text, (list, dict)):
+        return text
+    
+    if not isinstance(text, str):
+        raise ValueError(f"Expected string, list, or dict, got {type(text)}")
+    
+    text = text.strip()
+    
+    # Try to extract from markdown code block
+    # Pattern matches: `````` or ``````
+    match = re.search(r'``````', text, re.DOTALL)
+    
+    if match:
+        json_str = match.group(1).strip()
+    else:
+        # No markdown block, use the whole text
+        json_str = text
+    
+    # Clean up any remaining artifacts
+    json_str = json_str.strip().strip('`')
+    
+    # Parse JSON
+    try:
+        return json.loads(json_str)
+    except json.JSONDecodeError as e:
+        raise ValueError(
+            f"Failed to parse JSON from LLM output.\n"
+            f"Error: {e}\n"
+            f"First 300 chars: {text[:300]}"
+        )
