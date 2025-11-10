@@ -75,11 +75,18 @@ async def get_criteria_prompt(control: str, subcontrol: str, framework: str) -> 
 import json
 import re
 
+# src/core/utils.py
+
+import json
+import re
+
 def extract_json_from_markdown(text: str):
     """
-    Extracts and parses JSON from LLM responses that may be wrapped in markdown.
+    Extracts and parses JSON from LLM responses wrapped in markdown or quotes.
     Handles:
-    - Markdown code blocks (``````)
+    - Markdown code blocks with backticks (```json ... ```
+    - Triple single quotes ('''json ... ''')
+    - Triple double quotes ("""json ... """)
     - Plain JSON strings
     - Already-parsed Python objects
     """
@@ -92,18 +99,27 @@ def extract_json_from_markdown(text: str):
     
     text = text.strip()
     
-    # Try to extract from markdown code block
-    # Pattern matches: `````` or ``````
-    match = re.search(r'``````', text, re.DOTALL)
+    # Try to extract from code block (handles ```, ''', or """)
+    # Pattern matches: `````` or '''json\n...\n''' or similar
+    patterns = [
+        r'``````',      # Triple backticks
+        r"'''(?:json)?\s*\n(.*?)\n'''",      # Triple single quotes
+        r'"""(?:json)?\s*\n(.*?)\n"""',      # Triple double quotes
+    ]
     
-    if match:
-        json_str = match.group(1).strip()
-    else:
-        # No markdown block, use the whole text
+    json_str = None
+    for pattern in patterns:
+        match = re.search(pattern, text, re.DOTALL)
+        if match:
+            json_str = match.group(1).strip()
+            break
+    
+    # If no code block found, use the whole text
+    if json_str is None:
         json_str = text
     
     # Clean up any remaining artifacts
-    json_str = json_str.strip().strip('`')
+    json_str = json_str.strip().strip('`').strip("'").strip('"')
     
     # Parse JSON
     try:
@@ -114,3 +130,4 @@ def extract_json_from_markdown(text: str):
             f"Error: {e}\n"
             f"First 300 chars: {text[:300]}"
         )
+
