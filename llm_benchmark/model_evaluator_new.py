@@ -1,7 +1,6 @@
 """
 Evaluator for LLM-generated content
 Optimized for performance, reusability, and maintainability
-
 Save as: model_evaluator.py
 """
 
