@@ -1,30 +1,50 @@
-
-# updated
+# We import tools that help us run tasks at the same time (async), handle JSON,
+# log messages, and define types for function inputs and outputs.
 import asyncio
 import json
 import logging
 from typing import List, Dict, Any
 from concurrent.futures import ThreadPoolExecutor
 
+# We import NumPy, a library for working with numbers and vectors (lists of numbers).
 import numpy as np
+
+# We import SentenceTransformer, a library that turns sentences into numeric vectors
+# so we can measure how similar two sentences are in meaning.
 from sentence_transformers import SentenceTransformer
 
 # -------------------------
 # Configuration & Logging
 # -------------------------
+
+# Create a "logger" that we will use to print warnings or error messages.
 logger = logging.getLogger(__name__)
+
+# Tell Python to show log messages of level INFO and above in the console.
 logging.basicConfig(level=logging.INFO)
 
-# SentenceTransformer model
-# You can switch to "all-mpnet-base-v2" later if you want a stronger model.
+# -------------------------
+# Embedding model setup
+# -------------------------
+
+# Name of the sentence embedding model we will use.
+# This model converts sentences into numeric vectors that capture their meaning.
+# You can replace this with "all-mpnet-base-v2" in future for more accuracy.
 MODEL_NAME = "all-MiniLM-L6-v2"
+
+# We load the sentence embedding model into memory.
 MODEL = SentenceTransformer(MODEL_NAME)
+
+# We create a pool of worker threads to run heavy tasks (like embedding) without blocking.
 EXECUTOR = ThreadPoolExecutor(max_workers=4)
 
+# -------------------------
 # Thresholds
-SIMILARITY_THRESHOLD = 0.65   # hallucination detection
-GOOD_THRESHOLD_85 = 0.85
-GOOD_THRESHOLD_90 = 0.90
+# -------------------------
+
+# If the similarity between LLM output and human text is below this value,
+# we will treat it as "hallucinated" (too different from what was expected).
+SIMILARITY_THRESHOLD = 0.65
 
 
 # -------------------------
@@ -33,60 +53,49 @@ GOOD_THRESHOLD_90 = 0.90
 
 def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
     """
-    Calculate the cosine similarity between two vectors.
-    Returns a value in [-1, 1].
+    This function measures how similar two numeric vectors are.
+    Each vector represents a sentence.
+    The result is between -1 and 1:
+      - 1 means "very similar",
+      - 0 means "unrelated",
+      - -1 means "opposite".
     """
+    # Make sure both vectors are NumPy arrays with decimal numbers.
     vec1 = np.asarray(vec1, dtype=np.float32)
     vec2 = np.asarray(vec2, dtype=np.float32)
+
+    # Calculate the length (magnitude) of each vector.
     norm1 = np.linalg.norm(vec1)
     norm2 = np.linalg.norm(vec2)
+
+    # If either vector has length 0, we cannot compute a meaningful similarity.
     if norm1 == 0.0 or norm2 == 0.0:
         return 0.0
+
+    # Compute the cosine similarity using the dot product formula.
     return float(np.dot(vec1, vec2) / (norm1 * norm2))
 
 
 async def embed_texts(texts: List[str]) -> np.ndarray:
     """
-    Convert a list of texts into numerical embeddings using SentenceTransformer.
+    This function takes a list of text sentences and converts each one
+    into a numeric vector using the SentenceTransformer model.
+    These vectors let us mathematically compare meanings of sentences.
     """
+    # If there are no texts, return an empty matrix with the correct number of columns.
     if not texts:
         dim = MODEL.get_sentence_embedding_dimension()
         return np.zeros((0, dim), dtype=np.float32)
 
+    # Get the current event loop that runs asynchronous tasks.
     loop = asyncio.get_event_loop()
+
+    # Run the embedding work in a background thread so it doesn’t block other tasks.
+    # MODEL.encode() converts each sentence into a numeric vector.
     return await loop.run_in_executor(
         EXECUTOR,
         lambda: MODEL.encode(texts, convert_to_numpy=True)
     )
-
-
-def detect_hallucinations(
-    llm_embeds: np.ndarray,
-    user_embeds: np.ndarray,
-    threshold: float
-) -> List[int]:
-    """
-    Mark outputs as hallucinated if similarity with corresponding reference
-    is below `threshold`. Extra LLM outputs (without reference) are also
-    considered hallucinated.
-    """
-    hallucinations: List[int] = []
-
-    if user_embeds is None or user_embeds.shape[0] == 0:
-        # No reference at all: everything is hallucinated
-        return list(range(llm_embeds.shape[0])) if llm_embeds is not None else []
-
-    n = min(llm_embeds.shape[0], user_embeds.shape[0])
-    for i in range(n):
-        sim = cosine_similarity(llm_embeds[i], user_embeds[i])
-        if sim < threshold:
-            hallucinations.append(i)
-
-    # Any extra LLM outputs beyond reference count are hallucinated
-    if llm_embeds.shape[0] > n:
-        hallucinations.extend(range(n, llm_embeds.shape[0]))
-
-    return hallucinations
 
 
 # -------------------------
@@ -98,71 +107,105 @@ async def evaluate_llm_vs_user_semantic_only(
     user_input: Dict[str, Any]
 ) -> Dict[str, Any]:
     """
-    Evaluate LLM-generated criteria against user/reference criteria using
-    semantic similarity only.
+    This function compares criteria generated by the LLM (AI model)
+    with criteria written by a human, using only semantic (meaning-based) similarity.
 
-    Returns:
-      {
-        "overall_metrics": {
-            "control_id": ...,
-            "semantic_similarity": ...,      # mean similarity (same as overall_mean)
-            "overall_mean": ...,
-            "coverage_85": ...,
-            "coverage_90": ...,
-            ...
-        },
-        "per_criterion_results": [
-            {
-                "semantic_similarity": ...,
-                "meets_85": true/false,
-                "meets_90": true/false,
-                ...
-            },
-            ...
-        ]
-      }
+    It returns a dictionary with:
+      - overall_metrics: one summary per control (average similarity, hallucinations, etc.)
+      - per_criterion_results: one entry per individual criterion pair.
     """
+
+    # This is what we return if something goes wrong (e.g., an exception happens).
     default_result = {"overall_metrics": {}, "per_criterion_results": []}
 
     try:
         # -------------------------
         # Parse LLM output
         # -------------------------
-        # Robustly strip code fences if present
+
+        # Remove extra spaces or line breaks from the start and end of the LLM output.
         stripped = llm_output.strip()
+
+        # If the output starts with ``` it means the model wrapped JSON in a code block.
         if stripped.startswith("```"):
-            # remove starting fence like ``` or ```json
+            # Find the first line break (end of the ``` or ```json line).
             first_newline = stripped.find("\n")
+            # If we find it, remove everything up to and including that line.
             if first_newline != -1:
                 stripped = stripped[first_newline + 1:]
+            # If the text now ends with ``` remove those last three characters.
             if stripped.endswith("```"):
                 stripped = stripped[:-3]
+
+        # Convert the cleaned JSON string to a Python object (list of dicts).
         llm_json = json.loads(stripped)
 
+        # Get the list of human-written criteria from user_input.
         expected_content = user_input.get("compare_content", {}).get("expected_content", [])
 
+        # If either the LLM output or the human content is empty, log a warning.
         if not llm_json or not expected_content:
             logger.warning("LLM output or expected content is empty")
 
-        # Reference/user criteria and LLM criteria
+        # Extract the text of each criterion from the LLM output.
         llm_texts = [item.get("criteria", "") for item in llm_json]
+
+        # Extract the text of each human criterion from expected_content.
         user_texts = [item.get("criteria", "") for item in expected_content]
 
         # -------------------------
         # Generate embeddings
         # -------------------------
+
+        # At the same time, convert LLM and human criteria into numeric vectors.
+        # This runs in parallel using asyncio.gather.
         llm_embeds, user_embeds = await asyncio.gather(
             embed_texts(llm_texts),
             embed_texts(user_texts)
         )
 
+        # Determine how many pairs we can compare.
+        # We only compare up to the smallest count between LLM and human criteria.
         n_pairs = min(llm_embeds.shape[0], user_embeds.shape[0])
 
         # -------------------------
-        # Detect hallucinations
+        # Compute similarities once
         # -------------------------
-        hallucinations = detect_hallucinations(llm_embeds, user_embeds, SIMILARITY_THRESHOLD)
+
+        # This list will store the similarity score for each (LLM, human) pair.
+        pair_sims: List[float] = []
+
+        # For each pair at the same index (1 with 1, 2 with 2, 3 with 3, etc.),
+        # compute the semantic similarity and save it.
+        for i in range(n_pairs):
+            pair_sims.append(cosine_similarity(llm_embeds[i], user_embeds[i]))
+
+        # -------------------------
+        # Hallucination detection using pair_sims
+        # -------------------------
+
+        # This list will hold the indices of LLM outputs that we consider "hallucinated".
+        hallucinations: List[int] = []
+
+        # If there are no human embeddings at all, we treat every LLM output as hallucinated.
+        if user_embeds.shape[0] == 0:
+            hallucinations = list(range(llm_embeds.shape[0]))
+        else:
+            # For each pair, if the similarity is below the threshold,
+            # mark that index as hallucinated (too different from the expected meaning).
+            for i, sim in enumerate(pair_sims):
+                if sim < SIMILARITY_THRESHOLD:
+                    hallucinations.append(i)
+
+            # If the LLM produced more criteria than the human side,
+            # mark all extra ones as hallucinations because there is no reference to compare.
+            if llm_embeds.shape[0] > n_pairs:
+                hallucinations.extend(range(n_pairs, llm_embeds.shape[0]))
+
+        # Count how many hallucinated criteria we found.
         hallucination_count = len(hallucinations)
+
+        # Calculate what fraction of all LLM criteria are hallucinated.
         hallucination_rate = (
             hallucination_count / llm_embeds.shape[0]
             if llm_embeds is not None and llm_embeds.shape[0] > 0
@@ -170,21 +213,25 @@ async def evaluate_llm_vs_user_semantic_only(
         )
 
         # -------------------------
-        # Compute similarities once (vectorised loop)
+        # Overall average similarity (per control/test_case)
         # -------------------------
-        pair_sims: List[float] = []
-        for i in range(n_pairs):
-            pair_sims.append(cosine_similarity(llm_embeds[i], user_embeds[i]))
 
-        # Coverage metrics
-        overall_mean = float(np.mean(pair_sims)) if pair_sims else 0.0
-        coverage_85 = float(np.mean([s >= GOOD_THRESHOLD_85 for s in pair_sims])) if pair_sims else 0.0
-        coverage_90 = float(np.mean([s >= GOOD_THRESHOLD_90 for s in pair_sims])) if pair_sims else 0.0
+        # Compute the average similarity across all compared pairs.
+        # This gives us one summary score for the control.
+        average_semantic_similarity = float(np.mean(pair_sims)) if pair_sims else 0.0
 
         # -------------------------
         # Per-criterion evaluation
         # -------------------------
+
+        # This list will hold detailed info for each individual criterion pair.
         per_criterion_results = []
+
+        # For each pair, build a result record that contains:
+        # - the human criterion text
+        # - the LLM criterion text
+        # - their similarity score
+        # - whether it's hallucinated or not
         for i in range(n_pairs):
             sim = pair_sims[i]
             per_criterion_results.append({
@@ -195,15 +242,16 @@ async def evaluate_llm_vs_user_semantic_only(
                 "control_id": user_input.get("control_id", ""),
                 "control": user_input.get("control", ""),
                 "subcontrol": user_input.get("subcontrol", ""),
+                # The key number: how similar this pair of sentences is, on average.
                 "semantic_similarity": round(sim, 4),
+                # Whether we think this is too different from the human text.
                 "is_hallucinated": i in hallucinations,
-                "semantic_similarity_threshold": SIMILARITY_THRESHOLD,
-                # extra flags for per-criteria evaluation
-                "meets_85": sim >= GOOD_THRESHOLD_85,
-                "meets_90": sim >= GOOD_THRESHOLD_90
+                # The threshold we used to decide hallucination.
+                "semantic_similarity_threshold": SIMILARITY_THRESHOLD
             })
 
-        # Add hallucinated outputs without reference
+        # Now handle any extra LLM criteria that had no corresponding human criterion.
+        # We mark them as hallucinated with 0 similarity.
         for i in range(n_pairs, llm_embeds.shape[0]):
             per_criterion_results.append({
                 "criteria_id": llm_json[i].get("id"),
@@ -215,44 +263,59 @@ async def evaluate_llm_vs_user_semantic_only(
                 "subcontrol": user_input.get("subcontrol", ""),
                 "semantic_similarity": 0.0,
                 "is_hallucinated": True,
-                "semantic_similarity_threshold": SIMILARITY_THRESHOLD,
-                "meets_85": False,
-                "meets_90": False
+                "semantic_similarity_threshold": SIMILARITY_THRESHOLD
             })
 
         # -------------------------
         # Overall metrics (per test_case / control_id)
         # -------------------------
+
+        # Build a summary of the results for this control/subcontrol/framework.
         overall_metrics = {
+            # Identify which control this summary belongs to.
             "control_id": user_input.get("control_id", ""),
             "control": user_input.get("control", ""),
             "subcontrol": user_input.get("subcontrol", ""),
             "framework": user_input.get("framework", ""),
-            # backward-compatible overall similarity
-            "semantic_similarity": round(overall_mean, 4),
-            # new metrics
-            "overall_mean": round(overall_mean, 4),
-            "coverage_85": round(coverage_85, 4),
-            "coverage_90": round(coverage_90, 4),
+
+            # The main metric: average similarity across all criteria pairs.
+            "average_semantic_similarity": round(average_semantic_similarity, 4),
+
+            # How many criteria seem "hallucinated".
             "hallucination_count": hallucination_count,
+
+            # The percentage of hallucinated criteria.
             "hallucination_rate": round(hallucination_rate, 4),
+
+            # The list of indices that were flagged as hallucinated.
             "hallucinations": hallucinations
         }
 
+        # Return both the overall summary and the detailed per-criterion results.
         return {
             "overall_metrics": overall_metrics,
             "per_criterion_results": per_criterion_results
         }
 
     except Exception:
+        # If anything goes wrong in the try-block above, log the error with traceback.
         logger.exception("Evaluation failed")
+        # And return the default empty result structure.
         return default_result
 
 
 # -------------------------
 # Demo main
 # -------------------------
+
 async def main_demo():
+    """
+    This is a small example to show how the evaluation works.
+    It builds a fake user_input (with human criteria) and a fake llm_output,
+    then runs the evaluation and prints the result.
+    """
+
+    # Example of input that describes one control, with 3 human-written criteria.
     user_input = {
         "control_id": "M1.1.1",
         "control": "Understanding The Entity and its Context",
@@ -267,15 +330,22 @@ async def main_demo():
         }
     }
 
+    # Example of LLM-generated criteria for the same control.
+    # In real use, this would come from your LLM API call.
     llm_output_json = json.dumps([
         {"id": 1, "criteria": "Identify all relevant stakeholders affecting information security."},
         {"id": 2, "criteria": "Perform stakeholder analysis on a regular basis."},
         {"id": 3, "criteria": "Define and maintain communication channels with stakeholders."}
     ])
 
+    # Call the evaluation function and wait for the result.
     result = await evaluate_llm_vs_user_semantic_only(llm_output_json, user_input)
+
+    # Print the result in a nicely formatted JSON string.
     print(json.dumps(result, indent=2))
 
 
+# This block runs only if this file is executed directly (not imported).
 if __name__ == "__main__":
+    # Run the demo example using Python's asyncio event loop.
     asyncio.run(main_demo())
