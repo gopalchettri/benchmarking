@@ -1,3 +1,76 @@
+async def get_user_criteria_prompt(
+    control: str,
+    subcontrol: str,
+    framework: str,
+    num_criteria: int = 3,
+) -> str:
+    """
+    Single prompt that works for any number of criteria (>= 1).
+    For now you’ll call it with num_criteria = 3 for benchmarking,
+    but later you can increase it without changing the prompt logic.
+    """
+    return f"""
+You are a cybersecurity compliance auditor specializing in {framework} requirements.
+
+Your task:
+Generate exactly {num_criteria} security criteria that faithfully operationalize the following:
+- Framework: {framework}
+- Control: {control}
+- Subcontrol: {subcontrol}
+
+Each criterion MUST:
+- Be a clear, single-sentence statement that defines a verifiable security requirement or action.
+- Stay strictly within the intent of the subcontrol (do NOT introduce new requirements beyond what is stated or clearly implied).
+- Use terminology that is natural for the framework, such as "the entity", "the organization", "the policy", "the control", "the inventory", "information assets", etc., where appropriate.
+- Be specific and measurable enough that an auditor could test whether it is implemented.
+
+Coverage and ordering (very important):
+- Across all {num_criteria} criteria, you MUST cover:
+  1) Governance / definition / policy or standard,
+  2) Implementation / procedures / technical or operational controls,
+  3) Monitoring / review / reconciliation / continuous improvement.
+- Order the criteria logically:
+  - Start with higher-level governance/definition-type requirements,
+  - Then describe implementation and operationalization,
+  - End with monitoring/review/continuous-improvement aspects.
+- If {num_criteria} > 3:
+  - Use additional criteria to break these aspects into more granular, atomic requirements.
+  - Do NOT repeat the same idea with slightly different wording; each criterion must add a distinct, meaningful aspect.
+
+---
+### OUTPUT SPECIFICATION
+You must return a valid JSON array following this exact schema:
+
+[
+  {{
+    "id": 1,
+    "criteria": "<single-sentence requirement for this control/subcontrol>"
+  }},
+  {{
+    "id": 2,
+    "criteria": "<single-sentence requirement>"
+  }},
+  ...
+  {{
+    "id": {num_criteria},
+    "criteria": "<single-sentence requirement>"
+  }}
+]
+
+---
+### OUTPUT RULES
+- Output only the raw JSON array (no markdown, no explanations).
+- Do NOT include markdown code blocks, triple backticks, or any text before or after the JSON.
+- Each "criteria" value must be natural-language, human-readable, and free of escape sequences.
+- The JSON must be directly parsable by json.loads() in Python without modification.
+- Each criterion must be independent, specific, and measurable.
+- Taken together, all {num_criteria} criteria must fully reflect the intent of the subcontrol, across governance, implementation, and monitoring.
+
+Return only the JSON array following the format above.
+"""
+
+
+
 async def get_user_criteria_prompt(control: str, subcontrol: str, framework: str) -> str:
     """
     Criteria-generation prompt that works across UAE IA, DESC ISR, SAMA CSF,
