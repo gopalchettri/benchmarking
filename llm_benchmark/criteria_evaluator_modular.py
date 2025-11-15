@@ -1,17 +1,45 @@
 """
 semantic_evaluator.py
 
-Goal:
-Compare AI-generated criteria with human-written criteria and calculate
-how similar they are in meaning (semantic similarity).
+Purpose:
+- Compare criteria written by an AI model with criteria written by a human expert.
+- Measure how close they are in meaning (similarity from 0 to 1).
+- Highlight which AI criteria are clearly not close enough and should be reviewed.
 
-Main public function:
+Main function to use:
     evaluate_llm_vs_user_semantic_only(llm_output, user_input)
 
-It returns:
+Inputs:
+- llm_output: JSON string from the AI, e.g.
+      '[{"id": 1, "criteria": "..."}, {"id": 2, "criteria": "..."}]'
+- user_input: Python dict with fields:
+      control_id, control, subcontrol, framework,
+      compare_content.expected_content = list of {"id", "criteria"}
+
+Output:
 {
-  "overall_metrics": { ... summary for one control ... },
-  "per_criterion_results": [ ... one entry per criterion pair ... ]
+  "overall_metrics": {
+    "control_id": "...",
+    "control": "...",
+    "subcontrol": "...",
+    "framework": "...",
+    "average_similarity": 0.87,
+    "low_similarity_count": 1
+  },
+  "per_criterion_results": [
+    {
+      "criteria_id": 1,
+      "human_criteria": "...",
+      "llm_criteria": "...",
+      "framework": "...",
+      "control_id": "...",
+      "control": "...",
+      "subcontrol": "...",
+      "similarity": 0.91,
+      "is_low_similarity": false
+    },
+    ...
+  ]
 }
 """
 
@@ -30,15 +58,16 @@ from sentence_transformers import SentenceTransformer  # For turning sentences i
 
 
 # ---------------------------------------------------------
-# Global setup – logging, model, and thresholds
+# Global setup – logging, model, and similarity limit
 # ---------------------------------------------------------
 
+# Set up a basic logger so we can see warnings or errors
 logger = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 
 # Name of the sentence embedding model.
 # This model turns each sentence into a numeric vector representing its meaning.
-MODEL_NAME = "all-MiniLM-L6-v2"   # You can later try "all-mpnet-base-v2" for higher quality.
+MODEL_NAME = "all-MiniLM-L6-v2"   # You can later try "all-mpnet-base-v2" for higher accuracy.
 
 # Load the embedding model once (so we don't reload it every time).
 MODEL = SentenceTransformer(MODEL_NAME)
@@ -47,8 +76,8 @@ MODEL = SentenceTransformer(MODEL_NAME)
 EXECUTOR = ThreadPoolExecutor(max_workers=4)
 
 # If similarity between AI and human text is below this value,
-# we will treat it as "hallucinated" (too different from what was expected).
-SIMILARITY_THRESHOLD = 0.65
+# we will call it "low similarity" and mark it for review.
+LOW_SIMILARITY_LIMIT = 0.70
 
 
 # ---------------------------------------------------------
@@ -69,7 +98,7 @@ def cosine_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
     vec1 = np.asarray(vec1, dtype=np.float32)
     vec2 = np.asarray(vec2, dtype=np.float32)
 
-    # Vector length (magnitude)
+    # Vector lengths (magnitudes)
     norm1 = np.linalg.norm(vec1)
     norm2 = np.linalg.norm(vec2)
 
@@ -104,7 +133,7 @@ async def embed_texts(texts: List[str]) -> np.ndarray:
 
 
 # ---------------------------------------------------------
-# Small helper functions – each does one simple thing
+# Helper functions – each does one small step
 # ---------------------------------------------------------
 
 def clean_and_parse_llm_output(llm_output: str) -> List[Dict[str, Any]]:
@@ -173,44 +202,40 @@ def compute_pair_similarities(
     return pair_sims, n_pairs
 
 
-def detect_hallucinations(
+def find_low_similarity_items(
     pair_sims: List[float],
     llm_count: int,
     human_count: int,
     n_pairs: int,
-    threshold: float
-) -> Tuple[List[int], int, float]:
+    low_limit: float
+) -> Tuple[List[int], int]:
     """
-    Decide which AI criteria are "hallucinated":
+    Find which AI criteria have low similarity compared to human criteria.
 
-    - too low similarity with matching human sentence (< threshold), OR
-    - extra AI sentences that have no human reference.
+    - low similarity = similarity < low_limit
+    - extra AI criteria (no human pair) are also treated as low similarity.
 
     Returns:
-      - list of indices that are hallucinated
-      - how many there are
-      - what fraction of all AI criteria that is
+      - indices of items that have low similarity
+      - how many such items there are
     """
-    hallucinations: List[int] = []
+    low_indices: List[int] = []
 
-    # If there are no human sentences at all, everything from the AI is "untrusted".
     if human_count == 0:
-        hallucinations = list(range(llm_count))
+        # No human baseline: treat everything as low similarity
+        low_indices = list(range(llm_count))
     else:
-        # Mark pairs with low similarity as hallucinated.
+        # Check each pair score
         for i, sim in enumerate(pair_sims):
-            if sim < threshold:
-                hallucinations.append(i)
+            if sim < low_limit:
+                low_indices.append(i)
 
-        # Any extra AI sentences beyond the number of human sentences
-        # are also treated as hallucinated (no reference to compare to).
+        # Extra AI-only items
         if llm_count > n_pairs:
-            hallucinations.extend(range(n_pairs, llm_count))
+            low_indices.extend(range(n_pairs, llm_count))
 
-    hallucination_count = len(hallucinations)
-    hallucination_rate = (hallucination_count / llm_count) if llm_count > 0 else 0.0
-
-    return hallucinations, hallucination_count, hallucination_rate
+    count = len(low_indices)
+    return low_indices, count
 
 
 def build_per_criterion_results(
@@ -219,18 +244,15 @@ def build_per_criterion_results(
     human_texts: List[str],
     user_input: Dict[str, Any],
     pair_sims: List[float],
-    hallucinations: List[int],
+    low_indices: List[int],
     n_pairs: int,
-    threshold: float
 ) -> List[Dict[str, Any]]:
     """
-    Build a list with detailed information for each criterion pair.
-
-    Each item in the list describes:
-      - the human sentence,
-      - the AI sentence,
-      - how similar they are,
-      - whether we flagged it as hallucinated.
+    Build one record per criterion pair with:
+      - human text
+      - AI text
+      - similarity score
+      - whether it has low similarity
     """
     framework = user_input.get("framework", "")
     control_id = user_input.get("control_id", "")
@@ -239,7 +261,7 @@ def build_per_criterion_results(
 
     results: List[Dict[str, Any]] = []
 
-    # First, handle the pairs where both AI and human criteria exist.
+    # AI + human pairs
     for i in range(n_pairs):
         sim = pair_sims[i]
         results.append({
@@ -250,13 +272,13 @@ def build_per_criterion_results(
             "control_id": control_id,
             "control": control,
             "subcontrol": subcontrol,
-            "semantic_similarity": round(sim, 4),
-            "is_hallucinated": i in hallucinations,
-            "semantic_similarity_threshold": threshold
+            # Main number for each criterion
+            "similarity": round(sim, 4),
+            # True if this item should be considered weak / needs checking
+            "is_low_similarity": i in low_indices
         })
 
-    # Then, if there are extra AI criteria with no human pair,
-    # add them as fully hallucinated with similarity 0.
+    # Extra AI-only criteria (no human counterpart)
     for i in range(n_pairs, len(llm_texts)):
         results.append({
             "criteria_id": llm_json[i].get("id"),
@@ -266,9 +288,8 @@ def build_per_criterion_results(
             "control_id": control_id,
             "control": control,
             "subcontrol": subcontrol,
-            "semantic_similarity": 0.0,
-            "is_hallucinated": True,
-            "semantic_similarity_threshold": threshold
+            "similarity": 0.0,
+            "is_low_similarity": True
         })
 
     return results
@@ -277,26 +298,25 @@ def build_per_criterion_results(
 def build_overall_metrics(
     user_input: Dict[str, Any],
     pair_sims: List[float],
-    hallucinations: List[int],
-    hallucination_rate: float
+    low_indices: List[int],
 ) -> Dict[str, Any]:
     """
-    Build a single summary dictionary for this control / test case.
+    Build an easy-to-understand summary for this control / test case.
 
-    Key number here:
-      - average_semantic_similarity: average score across all pairs.
+    Key number:
+      - average_similarity: average score across all pairs (0 to 1).
     """
-    average_sim = float(np.mean(pair_sims)) if pair_sims else 0.0
+    average_similarity = float(np.mean(pair_sims)) if pair_sims else 0.0
 
     return {
         "control_id": user_input.get("control_id", ""),
         "control": user_input.get("control", ""),
         "subcontrol": user_input.get("subcontrol", ""),
         "framework": user_input.get("framework", ""),
-        "average_semantic_similarity": round(average_sim, 4),
-        "hallucination_count": len(hallucinations),
-        "hallucination_rate": round(hallucination_rate, 4),
-        "hallucinations": hallucinations,
+        # Main KPI in plain language
+        "average_similarity": round(average_similarity, 4),
+        # How many AI criteria have clearly low similarity
+        "low_similarity_count": len(low_indices)
     }
 
 
@@ -339,39 +359,37 @@ async def evaluate_llm_vs_user_semantic_only(
             embed_texts(human_texts)
         )
 
-        # 4) Compute similarity for each aligned pair
+        # 4) Compute similarity for each pair
         pair_sims, n_pairs = compute_pair_similarities(llm_embeds, human_embeds)
 
-        # 5) Detect hallucinations (too different / no human reference)
+        # 5) Find which ones have low similarity
         llm_count = llm_embeds.shape[0]
         human_count = human_embeds.shape[0]
 
-        hallucinations, hallucination_count, hallucination_rate = detect_hallucinations(
+        low_indices, _ = find_low_similarity_items(
             pair_sims=pair_sims,
             llm_count=llm_count,
             human_count=human_count,
             n_pairs=n_pairs,
-            threshold=SIMILARITY_THRESHOLD
+            low_limit=LOW_SIMILARITY_LIMIT
         )
 
-        # 6) Build detailed report per criterion
+        # 6) Per-criterion result list
         per_criterion_results = build_per_criterion_results(
             llm_json=llm_json,
             llm_texts=llm_texts,
             human_texts=human_texts,
             user_input=user_input,
             pair_sims=pair_sims,
-            hallucinations=hallucinations,
+            low_indices=low_indices,
             n_pairs=n_pairs,
-            threshold=SIMILARITY_THRESHOLD
         )
 
-        # 7) Build overall summary metrics
+        # 7) Overall metrics
         overall_metrics = build_overall_metrics(
             user_input=user_input,
             pair_sims=pair_sims,
-            hallucinations=hallucinations,
-            hallucination_rate=hallucination_rate
+            low_indices=low_indices,
         )
 
         return {
