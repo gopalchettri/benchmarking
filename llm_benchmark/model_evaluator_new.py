@@ -82,6 +82,24 @@ class EvaluationResult:
 # -----------------------
 # Utility functions
 # -----------------------
+import torch
+from sentence_transformers import util
+
+def inner_product_similarity(vec1: np.ndarray, vec2: np.ndarray) -> float:
+    """
+    Inner product (dot product) between two SentenceTransformer embeddings,
+    computed via sentence_transformers.util.dot_score.
+    """
+    v1 = np.asarray(vec1, dtype=np.float32)
+    v2 = np.asarray(vec2, dtype=np.float32)
+
+    # Convert to torch tensors with batch dimension
+    t1 = torch.from_numpy(v1).unsqueeze(0)  # shape: (1, dim)
+    t2 = torch.from_numpy(v2).unsqueeze(0)  # shape: (1, dim)
+
+    # util.dot_score returns a 1x1 tensor here
+    ip = util.dot_score(t1, t2)[0][0].item()
+    return float(ip)
 
 
 def _select_device() -> str:
