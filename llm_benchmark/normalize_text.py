@@ -18,3 +18,10 @@ def normalize_text(text: str) -> str:
     for phrase in boilerplate:
         text = text.replace(phrase, "")
     return text
+
+-------------------------------------------------------------------------------------
+ref_criteria_norm = [normalize_text(c) for c in reference_criteria]
+llm_criteria_norm = [normalize_text(c) for c in llm_criteria]
+
+ref_emb = MODEL.encode(ref_criteria_norm, convert_to_tensor=True)
+llm_emb = MODEL.encode(llm_criteria_norm, convert_to_tensor=True)
