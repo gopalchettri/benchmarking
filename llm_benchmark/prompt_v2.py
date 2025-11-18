@@ -1,3 +1,113 @@
+"""
+prompts_tod_toe.py
+
+Prompt builders for generating Test of Design (TOD) and
+Test of Operating Effectiveness (TOE) criteria for cybersecurity frameworks.
+
+Usage pattern (example):
+
+from prompts_tod_toe import build_tod_toe_messages
+
+messages = build_tod_toe_messages(
+    framework="UAE Information Assurance Regulation",
+    control="T1.2.1.2: Inventory of Information and other Associated Assets",
+    subcontrol="11.2.1.2: The entity shall identify and maintain an up-to-date inventory of information assets within the entity.",
+    num_tod=3,
+    num_toe=3,
+)
+
+response = client.chat.completions.create(
+    model="phi-4",  # or your LLM
+    messages=messages,
+    temperature=0.1,
+    max_tokens=800,
+)
+
+raw_json = response.choices[0].message.content
+# raw_json should be a JSON string with:
+# {
+#   "llm_tod_criterias": [...],
+#   "llm_toe_criterias": [...]
+# }
+
+"""
+
+from typing import List, Dict
+
+
+# ---------------------------------------------------------------------
+# Framework-specific tone / style hints
+# ---------------------------------------------------------------------
+
+FRAMEWORK_HINT_MAP: Dict[str, str] = {
+    "UAE Information Assurance Regulation": """
+- Use formal wording such as “the entity shall” or “the organization shall” where appropriate.
+- Reflect the formal, regulatory tone typically used in UAE IA controls.
+- Emphasize governance, documentation, and risk-based justifications where needed.
+""",
+    "UAE IA": """
+- Use formal wording such as “the entity shall” or “the organization shall” where appropriate.
+- Reflect the formal, regulatory tone typically used in UAE IA controls.
+""",
+    "SAMA CSF": """
+- Use terminology suitable for banking and financial institutions (e.g., “the bank”, “financial institution”, “customer information”).
+- Maintain a formal, risk-based tone aligned with SAMA Cyber Security Framework.
+""",
+    "NIST CSF": """
+- Use risk-based language aligned with NIST Cybersecurity Framework functions (Identify, Protect, Detect, Respond, Recover).
+- Emphasize roles, responsibilities, and documented processes.
+""",
+    "ISO 27001": """
+- Align with ISO 27001 Annex A control style.
+- Use formal, management-system oriented language (policies, procedures, responsibilities, monitoring).
+""",
+    # Default fallback if framework not explicitly listed
+    "_default_": """
+- Use formal, professional cybersecurity and risk-management terminology.
+- Maintain a governance, risk, and compliance oriented tone.
+"""
+}
+
+
+def get_framework_hint(framework: str) -> str:
+    """
+    Resolve a framework-specific hint, falling back to a generic default.
+    """
+    key = (framework or "").strip()
+    return FRAMEWORK_HINT_MAP.get(key, FRAMEWORK_HINT_MAP["_default_"])
+
+
+# ---------------------------------------------------------------------
+# System prompt builder
+# ---------------------------------------------------------------------
+
+def get_tod_toe_system_prompt(framework: str) -> str:
+    """
+    System prompt for TOD + TOE generation.
+    This establishes the role and global behavior for the LLM.
+    """
+    return f"""
+You are a senior cybersecurity auditor specializing in {framework} and global audit practices.
+
+You generate two outputs:
+1) Test of Design (TOD) criteria – governance-level requirements describing what must exist.
+2) Test of Operating Effectiveness (TOE) criteria – evidence-based audit procedures describing how to test.
+
+Your responsibilities:
+- Interpret controls and subcontrols exactly as written.
+- Do NOT add new requirements that are not clearly stated or reasonably implied.
+- Generate criteria that match the tone, structure, and terminology of {framework}.
+- Ensure all output follows strict JSON formatting and can be parsed by json.loads() without modification.
+- Keep content concise, auditable, consistent, and domain-accurate.
+
+Your entire output must be only the JSON object. No markdown, no commentary, no code fences.
+""".strip()
+
+
+# ---------------------------------------------------------------------
+# User prompt builder
+# ---------------------------------------------------------------------
+
 def get_tod_toe_user_prompt(
     control: str,
     subcontrol: str,
@@ -5,6 +115,12 @@ def get_tod_toe_user_prompt(
     num_tod: int,
     num_toe: int,
 ) -> str:
+    """
+    User prompt text for generating TOD + TOE criteria in one LLM call.
+
+    - Supports multi-sentence criteria (as one logical criterion).
+    - Enforces separation between TOD (design) and TOE (testing).
+    """
     framework_hint = get_framework_hint(framework)
 
     return f"""
@@ -17,28 +133,28 @@ Subcontrol: {subcontrol}
 Apply the following framework-specific guidance where relevant:
 {framework_hint}
 
+
 ========================================================
 TEST OF DESIGN (TOD) – WHAT MUST EXIST
 ========================================================
 Generate exactly {num_tod} TOD criteria.
 
 Each TOD criterion MUST:
-- Be a single-sentence statement describing a required element of the control’s design
-  (e.g., policies, procedures, roles, responsibilities, scope, frequency, definitions, documentation).
-- Describe what the entity must have in place, not what an auditor does.
-- Use formal compliance language (e.g., "Existence of...", "Clear definition of...", "Documented procedures for...").
-- Avoid audit or testing verbs such as: verify, extract, inspect, validate, compare, match, check, sample.
-- Stay strictly within the intent and scope of the subcontrol; do not introduce unrelated requirements.
-- Be specific, measurable, and independent (no vague phrases like "adequate", "appropriate" without context).
+- Be a governance-level requirement describing what must exist in the control’s design
+  (policies, procedures, definitions, roles, responsibilities, documentation, scope, or frequency).
+- Be written as ONE logical criterion, but may contain multiple sentences when needed to express a complete requirement clearly.
+- Use formal compliance language such as “Existence of…”, “Clear definition of…”, “Documented procedures for…”, “Assignment of responsibilities for…”.
+- Not include operational or audit verbs such as verify, extract, compare, validate, inspect, review, check, sample, reconcile, correlate.
+- Stay strictly within the scope and intent of the subcontrol; do not introduce unrelated requirements.
+- Be measurable, specific, unambiguous, and independent of other criteria.
 
-Across all TOD criteria together, aim to cover where applicable:
-1) A governing policy or documented requirement,
-2) Defined scope/coverage and classification or categorization aspects,
-3) Roles, responsibilities, and ownership,
-4) Processes for review, update, or maintenance of the control.
+Collectively, TOD criteria must (where applicable):
+1) Establish the presence of required policy, procedure, or documentation.
+2) Define the scope, categorization, or coverage of the control.
+3) Clarify roles and responsibilities.
+4) Define update, maintenance, review, or lifecycle expectations.
 
-These TOD criteria should be written in the style of professional cybersecurity audit design criteria,
-not tied to any specific individual’s wording.
+TOD criteria should follow professional cybersecurity audit design style but not imitate any specific individual auditor.
 
 
 ========================================================
@@ -47,25 +163,24 @@ TEST OF OPERATING EFFECTIVENESS (TOE) – HOW TO TEST IT
 Generate exactly {num_toe} TOE criteria.
 
 Each TOE criterion MUST:
-- Describe a concrete audit step that a cybersecurity auditor would perform.
-- Start with an action verb such as: "Extract", "Review", "Compare", "Validate", "Cross-check",
-  "Match", "Identify", "Inspect", "Sample".
-- Clearly state:
-  - Which evidence is used (e.g., inventories, logs, policy documents, HR roster, configuration records),
-  - What fields or attributes are important (e.g., owner, timestamp, status, identifier),
-  - What the auditor is checking (e.g., completeness, accuracy, consistency, timeliness).
-- Reflect realistic audit practice: evidence gathering, field checks, sampling, reconciliation between sources, and flagging exceptions.
-- Avoid design-language such as "The entity shall…" or "The policy must define…"; that belongs in TOD.
-- Be specific and testable so that different auditors would perform essentially the same check.
+- Be a concrete audit procedure describing how an auditor verifies the control.
+- Begin with an action verb such as: “Extract”, “Review”, “Compare”, “Validate”, “Match”, “Cross-check”, “Inspect”, “Sample”, “Identify”.
+- Be ONE logical criterion, but may contain multiple sentences if needed (for example: step + condition + exception handling).
+- Specify:
+  • What evidence is used (logs, inventories, HR records, system exports, reports, timestamps, approvals, configurations).  
+  • Which fields or attributes are important (owner, timestamp, identifier, type, status).  
+  • What validation or comparison the auditor performs (completeness, accuracy, consistency, timeliness, correlation).  
+- Reflect authentic audit workflow: evidence gathering, extraction, verification, cross-system comparison, and exception identification.
+- Not include governance wording such as “The entity shall…” or “The policy must define…”, which belong to TOD.
 
-Across all TOE criteria together, aim to include:
-1) Evidence extraction from one or more authoritative systems,
-2) Completeness and accuracy checks on key fields,
-3) Date/timestamp or review-cycle validation where relevant,
-4) Cross-system comparison (e.g., inventory vs HR/AD) when applicable to the subcontrol,
-5) Identification of missing, invalid, or outdated records.
+Collectively, TOE criteria must include:
+1) Evidence extraction from authoritative systems.
+2) Field-level validation and completeness checks.
+3) Date/timestamp review when relevant.
+4) Cross-system reconciliation where applicable.
+5) Identification of missing, outdated, or inconsistent records.
 
-These TOE criteria should read like standard audit test procedures that any qualified auditor could follow.
+TOE criteria must read like standard audit procedures that any qualified auditor could perform.
 
 
 ========================================================
@@ -87,9 +202,58 @@ Return ONLY the JSON object below, with no text before or after:
 }}
 
 Rules:
-- No markdown, backticks, or commentary.
-- Only valid JSON; it must be directly parseable by json.loads() in Python with no changes.
-- Each "criteria" value must be a natural-language sentence in double quotes.
-- Do not invent new controls; stay within the subcontrol’s intent.
+- No markdown, no backticks, no commentary.
+- Only valid JSON, directly parseable by json.loads() in Python without modification.
+- Each "criteria" value must be a human-readable natural-language string.
+- Multi-sentence criteria are allowed, but must remain ONE coherent criterion.
+- Do not hallucinate unrelated requirements; stay strictly aligned to the subcontrol.
+
 Return only the JSON object.
 """.strip()
+
+
+# ---------------------------------------------------------------------
+# Helper: Build messages list for chat completion APIs
+# ---------------------------------------------------------------------
+
+def build_tod_toe_messages(
+    framework: str,
+    control: str,
+    subcontrol: str,
+    num_tod: int,
+    num_toe: int,
+) -> List[Dict[str, str]]:
+    """
+    Build a list of messages suitable for chat-based LLM APIs
+    (OpenAI, Azure OpenAI, etc.).
+
+    Example use:
+
+        messages = build_tod_toe_messages(
+            framework="UAE Information Assurance Regulation",
+            control="T1.2.1.2: Inventory of Information and other Associated Assets",
+            subcontrol="11.2.1.2: The entity shall identify and maintain an up-to-date inventory of information assets within the entity.",
+            num_tod=3,
+            num_toe=3,
+        )
+
+        response = client.chat.completions.create(
+            model="phi-4",
+            messages=messages,
+            temperature=0.1,
+            max_tokens=800,
+        )
+    """
+    system_prompt = get_tod_toe_system_prompt(framework)
+    user_prompt = get_tod_toe_user_prompt(
+        control=control,
+        subcontrol=subcontrol,
+        framework=framework,
+        num_tod=num_tod,
+        num_toe=num_toe,
+    )
+
+    return [
+        {"role": "system", "content": system_prompt},
+        {"role": "user", "content": user_prompt},
+    ]
