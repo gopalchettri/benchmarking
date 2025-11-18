@@ -1,0 +1,47 @@
+def save_output_to_rdbms_criteria_benchmark_criteria_level(
+    execution_id: str,
+    model_name: str,
+    evaluator_scores_dict: dict,
+):
+    # Top-level fields (same for all criteria)
+    framework = evaluator_scores_dict["framework"]
+    control_id = evaluator_scores_dict["control_id"]
+    control = evaluator_scores_dict["control"]
+    subcontrol = evaluator_scores_dict["subcontrol"]
+    sim_threshold = evaluator_scores_dict["semantic_similarity_threshold"]
+
+    # ---- TOD criteria ----
+    for crit in evaluator_scores_dict.get("tod", {}).get("criteria", []):
+        my_sql_save_criteria_level_result({
+            "execution_id": execution_id,
+            "model": model_name,
+            "framework": framework,
+            "control_id": control_id,
+            "control": control,
+            "subcontrol": subcontrol,
+            "criteria_id": crit["criteria_id"],
+            "criteria_type": "tod",
+            "human_criteria": crit["human_tod_criteria"],
+            "llm_criteria": crit["llm_tod_criteria"],
+            "similarity": crit["similarity"],
+            "is_low_similarity": crit["is_low_similarity"],
+            "semantic_similarity_threshold": sim_threshold,
+        })
+
+    # ---- TOE criteria ----
+    for crit in evaluator_scores_dict.get("toe", {}).get("criteria", []):
+        my_sql_save_criteria_level_result({
+            "execution_id": execution_id,
+            "model": model_name,
+            "framework": framework,
+            "control_id": control_id,
+            "control": control,
+            "subcontrol": subcontrol,
+            "criteria_id": crit["criteria_id"],
+            "criteria_type": "toe",
+            "human_criteria": crit["human_toe_criteria"],
+            "llm_criteria": crit["llm_toe_criteria"],
+            "similarity": crit["similarity"],
+            "is_low_similarity": crit["is_low_similarity"],
+            "semantic_similarity_threshold": sim_threshold,
+        })
