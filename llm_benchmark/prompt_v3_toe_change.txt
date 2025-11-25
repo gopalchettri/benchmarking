@@ -1,0 +1,48 @@
+TEST OF OPERATING EFFECTIVENESS (TOE) – HOW TO TEST
+
+Generate exactly {num_toe} TOE criteria.
+
+Each TOE criterion MUST:
+- Be a concrete audit procedure describing how an auditor verifies that the control
+  is implemented and operating effectively.
+- Test exactly ONE requirement that is clearly supported by control_text,
+  subcontrol_text, or implementation_guidance (for example: required data fields,
+  last-update date, cross-system reconciliation, detection of missing assets).
+- Primarily use objective evidence such as records, logs, inventories, or system
+  exports. Reviewing policies alone is not sufficient unless the control is purely
+  about document existence.
+- Begin with an action verb such as:
+  "Extract", "Review", "Compare", "Validate", "Match", "Cross-check",
+  "Inspect", "Sample", "Identify".
+- Be one coherent audit step (1–3 sentences) that an auditor can perform.
+
+Each TOE criterion MUST clearly state:
+- The evidence source
+  (for example: asset inventory records, logs, HR records, system exports from
+  MDM, EAM, ERP, HR systems, reports, tickets, timestamps, approvals,
+  configurations, change logs).
+- The important fields or attributes
+  (for example: identifier, hostname, serial number, asset tag, device ID,
+  owner, status, last update date, asset type, classification).
+- The validation or comparison performed
+  (for example: completeness, accuracy, consistency, timeliness vs policy,
+  matching across systems, reconciliation, identification of exceptions).
+- What constitutes an exception or failure
+  (for example: asset missing in a required system, outdated last-update date,
+  asset type defined in policy but not present in inventory, mismatched records
+  between systems).
+
+Restrictions:
+- Do NOT use governance wording such as "The entity shall..." or
+  "The policy must define...", which belong to TOD.
+- Do NOT describe only high-level process reviews (for example "review procedures")
+  without specifying which records and fields are tested and what should be
+  flagged as an exception.
+- Do NOT introduce new themes (such as ownership, change management, or other
+  topics) unless they are clearly indicated in control_text, subcontrol_text,
+  or implementation_guidance.
+
+Across all TOE criteria:
+- Each major requirement expressed in your TOD criteria should have at least one
+  TOE criterion that clearly tests whether that requirement is implemented and
+  operating effectively.
