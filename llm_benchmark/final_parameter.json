@@ -1,0 +1,72 @@
+[
+  {
+    "name": "CGA.1",
+    "human_readable_name": "ZeroTemp_FullProb_NoSampling",
+    "temperature": 0.0,
+    "top_p": 1.0,
+    "top_k": 50,
+    "min_p": 0.0,
+    "repetition_penalty": 1.05,
+    "frequency_penalty": 0.0,
+    "presence_penalty": 0.0,
+    "max_tokens": 1200,
+    "do_sampling": false,
+    "seed": 11
+  },
+  {
+    "name": "CGA.2",
+    "human_readable_name": "VeryLowTemp_Top90_MildRepeatControl",
+    "temperature": 0.2,
+    "top_p": 0.9,
+    "top_k": 50,
+    "min_p": 0.0,
+    "repetition_penalty": 1.1,
+    "frequency_penalty": 0.0,
+    "presence_penalty": 0.0,
+    "max_tokens": 1200,
+    "do_sampling": true,
+    "seed": 11
+  },
+  {
+    "name": "CGA.3",
+    "human_readable_name": "LowTemp_Top90_LightFreqPenalty",
+    "temperature": 0.3,
+    "top_p": 0.9,
+    "top_k": 50,
+    "min_p": 0.0,
+    "repetition_penalty": 1.15,
+    "frequency_penalty": 0.2,
+    "presence_penalty": 0.0,
+    "max_tokens": 1200,
+    "do_sampling": true,
+    "seed": 11
+  },
+  {
+    "name": "CGA.4",
+    "human_readable_name": "MedLowTemp_Top90_ModerateFreqPenalty",
+    "temperature": 0.4,
+    "top_p": 0.9,
+    "top_k": 45,
+    "min_p": 0.0,
+    "repetition_penalty": 1.2,
+    "frequency_penalty": 0.3,
+    "presence_penalty": 0.1,
+    "max_tokens": 1200,
+    "do_sampling": true,
+    "seed": 11
+  },
+  {
+    "name": "CGA.10",
+    "human_readable_name": "MediumTemp_Top85_NucleusFocused",
+    "temperature": 0.5,
+    "top_p": 0.85,
+    "top_k": 50,
+    "min_p": 0.0,
+    "repetition_penalty": 1.2,
+    "frequency_penalty": 0.3,
+    "presence_penalty": 0.2,
+    "max_tokens": 1300,
+    "do_sampling": true,
+    "seed": 11
+  }
+]
