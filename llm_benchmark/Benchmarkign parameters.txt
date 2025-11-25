@@ -1,0 +1,262 @@
+Nice, this is exactly the kind of thing leadership will ask: *“What knobs are you turning and why?”*
+
+I’ll give you two things:
+
+1. **Which parameters we actually benchmark** (the important knobs) + simple rationale
+2. **Which CGA configs to run** and how to explain each one in plain English
+
+You can lift this straight into slides / a Word doc.
+
+---
+
+## 1️⃣ Parameters to benchmark (and how to explain them)
+
+These are the knobs where changing the value **really changes** how the AI writes TOD/TOE.
+
+### 1. `temperature` – *How cautious or creative the AI is*
+
+* **What it does:**
+  Controls how “adventurous” the wording is.
+* **Low values (0.0–0.3):**
+  Very cautious, sticks closely to the instructions → more similar to human criteria.
+* **Medium values (0.4–0.7):**
+  More variation in wording and structure, still within the control’s intent.
+* **Why we benchmark it:**
+
+  * TOD needs to be **very consistent and predictable**.
+  * TOE sometimes benefits from **slightly more natural language**.
+    We need to find the sweet spot where answers are clear and professional but still close to our human-written criteria (80–85% similarity).
+
+---
+
+### 2. `top_p` – *How wide the AI’s word choice is*
+
+* **What it does:**
+  Limits the AI to the “top X% most likely” words.
+* **High (`0.9–1.0`):**
+  Uses natural, common wording.
+* **Lower (`0.85`):**
+  More focused and conservative vocabulary.
+* **Why we benchmark it:**
+  We want wording that:
+
+  * sounds natural to auditors,
+  * but does not drift into strange or rare phrasing.
+    So we test a few values (1.0, 0.9, 0.85) to see which gives the best balance of **clarity + similarity**.
+
+---
+
+### 3. `top_k` – *How many options the AI considers each time*
+
+* **What it does:**
+  Limits the AI to the “top K candidate words” at each step (e.g., 30–50).
+* **Why it matters:**
+  If K is too high with high temperature, the AI can become noisy.
+  A reasonable K (30–50) lets it be flexible **without going off-topic**.
+* **Why we benchmark it (lightly):**
+  We keep `top_k` in a *sensible range* (mostly 45–50) across configs so:
+
+  * it doesn’t dominate behaviour, but
+  * it ensures stability when we increase temperature.
+
+---
+
+### 4. `repetition_penalty` – *Prevent “copy-paste” style answers*
+
+* **What it does:**
+  Punishes the model for using the **exact same phrase** over and over.
+* **Values (1.05–1.25):**
+
+  * Slightly above 1 → “Don’t just repeat yourself.”
+* **Why we benchmark it:**
+
+  * If it’s too low, all criteria start looking identical.
+  * If it’s too high, the AI is forced to change wording too much and we lose similarity.
+    We test mild to moderate penalties so criteria look professional and not cloned, while still matching human meaning.
+
+---
+
+### 5. `frequency_penalty` – *Discourage over-using the same words*
+
+* **What it does:**
+  Reduces the chance of repeating the same **word** too many times.
+* **Low (0.0–0.2):**
+  Gentle nudge to use varied language.
+* **Higher (0.3–0.5):**
+  Strong push to avoid repetition → more diverse wording, but lower similarity.
+* **Why we benchmark it:**
+  We want to know when a bit of variation improves readability vs. when it starts to **hurt** alignment with human criteria.
+
+---
+
+### 6. `presence_penalty` – *Encourage introducing new ideas*
+
+* **What it does:**
+  Rewards bringing in **new tokens/terms**, penalises repeating already-used ones.
+* **Low / 0.0:**
+  Stay on the same concepts.
+* **Higher:**
+  Push AI to add new concepts (risk of inventing extra requirements).
+* **Why we benchmark it (low values only):**
+  Our controls are strict. We mostly want **0.0** or very low values, to avoid the AI inventing new requirements. Some configs use small values to see how robust we are.
+
+---
+
+### 7. `do_sampling` – *Deterministic vs. slightly random generation*
+
+* **What it does:**
+
+  * `false` = fully deterministic → same answer every time.
+  * `true` = controlled randomness within the limits of temperature/top_p.
+* **Why we benchmark it:**
+
+  * For **pure benchmarking & scoring**, we need **deterministic runs** (CGA.1).
+  * For **real-life usage**, a tiny bit of randomness can produce more natural language (CGA.2, 3, 4, 10).
+
+---
+
+### Parameters we keep “neutral” but still pass
+
+You said you must **pass all parameters**. These we keep in neutral / fixed positions:
+
+* `min_p = 0.0` → effectively **off**; has no impact in our setups.
+* `max_tokens` = 1200–1500 → just makes sure long answers don’t get cut off.
+* `seed` = 42 → only controls reproducibility, **not quality**.
+* `frequency_penalty` and `presence_penalty` = 0.0 in our stricter configs → no effect there.
+
+You can tell executives:
+
+> “These parameters are included for completeness, but set to values that don’t disturb the model’s behaviour in our use case.”
+
+---
+
+## 2️⃣ Which configs we benchmark – and how to justify them
+
+From your 10 CGA configs, these are the **5 we’ll actually benchmark** with the TOD/TOE prompt:
+
+### ✅ CGA.1 – **“Very Strict & Deterministic” (Baseline)**
+
+{
+  "name": "CGA.1",
+  "temperature": 0.0,        // ignored when do_sampling=false
+  "top_p": 1.0,              // ignored when do_sampling=false
+  "top_k": 50,               // safe value; ignored when do_sampling=false
+  "min_p": 0.0,              // neutral
+  "repetition_penalty": 1.05,// only mild active knob
+  "frequency_penalty": 0.0,  // neutral
+  "presence_penalty": 0.0,   // neutral
+  "max_tokens": 1200,
+  "do_sampling": false,      // makes decoding deterministic
+  "seed": 11
+}
+
+**Executive explanation:**
+
+> This is our **reference setting**.
+> The AI behaves like a very cautious auditor: no randomness, no creativity, just following the prompt exactly.
+> We use this to see the **maximum possible alignment** between the model and human-written criteria.
+
+Used for:
+
+* Core benchmark for **TOD and TOE**.
+* Comparing models (Phi-4, Llama, GPT-OSS, Falcon, Jais, K2) on a fair, stable baseline.
+
+---
+
+### ✅ CGA.2 – **“Very Low Creativity, Slight Flexibility”**
+
+* `temperature`: 0.2
+* `top_p`: 0.9
+* `repetition_penalty`: 1.1
+* `frequency_penalty`: 0.0
+* `presence_penalty`: 0.0
+* `do_sampling`: true
+
+**Executive explanation:**
+
+> This setting is **almost as strict as CGA.1**, but allows small natural variations in wording.
+> It’s closer to how different human auditors might phrase the same requirement, while still keeping the meaning aligned.
+
+Used for:
+
+* Check if **slight freedom** improves readability without hurting similarity.
+* Often good for TOE, where instructions need to sound natural but remain precise.
+
+---
+
+### ✅ CGA.3 – **“Balanced: Careful but More Natural”**
+
+* `temperature`: 0.3
+* `top_p`: 0.9
+* `repetition_penalty`: 1.15
+* `frequency_penalty`: 0.2
+* `presence_penalty`: 0.0
+* `do_sampling`: true
+
+**Executive explanation:**
+
+> This is our **balanced setting**.
+> The AI is still careful but explains test steps in a more natural, descriptive way.
+> It helps us see if slightly richer language can stay within the control’s scope and still match human criteria.
+
+Used for:
+
+* Especially for **TOE**, where we want clear, step-by-step test procedures that feel like real audit workpapers.
+
+---
+
+### ✅ CGA.4 – **“Medium Cautious, Real-World Style”**
+
+* `temperature`: 0.4
+* `top_p`: 0.9
+* `repetition_penalty`: 1.2
+* `frequency_penalty`: 0.3
+* `presence_penalty`: 0.1
+* `do_sampling`: true
+
+**Executive explanation:**
+
+> CGA.4 starts to look like a **real-world mix** of auditors:
+> slightly more variation, less repetitive phrasing, and more natural wording.
+> We use it to test how robust our prompts are when the AI is allowed to sound more like different human writers.
+
+Used for:
+
+* Stress-testing how **consistent and on-scope** the AI stays when it’s given a bit more freedom.
+* Good for understanding how the system might behave in production over time as styles change.
+
+---
+
+### ✅ CGA.10 – **“Focused Creative (Stress Test)”**
+
+* `temperature`: 0.5
+* `top_p`: 0.85
+* `repetition_penalty`: 1.2
+* `frequency_penalty`: 0.3
+* `presence_penalty`: 0.2
+* `max_tokens`: 1300
+
+**Executive explanation:**
+
+> This is our **stress-test setting**.
+> The AI is more flexible in how it expresses itself, but we keep it focused by limiting it to the top 85% most likely words.
+> This helps us see if the design is strong enough that, even with more creative language, the AI still stays within the control and produces valid, testable criteria.
+
+Used for:
+
+* Checking **robustness** of prompts and guardrails.
+* Understanding how far we can push the model towards natural, varied language before it starts drifting from human criteria.
+
+---
+
+## 3️⃣ One slide summary you can reuse
+
+You can summarise it like this for your senior executives:
+
+> * We benchmark the AI using **5 parameter sets (CGA.1, 2, 3, 4, 10)**.
+> * These sets control how **strict vs. flexible** the AI is when generating control criteria and test steps.
+> * Lower-numbered sets (CGA.1–3) are **more cautious and repeatable**, optimised to match our human-written criteria (target 80–85% semantic similarity).
+> * Higher sets (CGA.4, 10) are **more expressive**, used to test how robust our design is when language becomes more natural and varied.
+> * All other parameters (like `min_p`, `seed`, and length limits) are kept neutral and fixed so they do not disturb the results.
+
+If you want, I can turn this into a small **table (rows = CGA.x, columns = “strictness”, “intended use”, “risk level”)** ready to paste into PowerPoint.
