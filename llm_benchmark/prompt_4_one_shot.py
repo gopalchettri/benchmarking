@@ -103,27 +103,25 @@ Example TOD criteria (design – what must exist):
 1) The entity has a documented policy for defining the information
    classification scheme.
 2) There is an approved information classification framework that addresses
-   information value, legal requirements, sensitivity, and criticality.
+   value, legal requirements, sensitivity, and criticality of information.
 3) The classification criteria include specific definitions or thresholds for
-   determining information value, legal/regulatory requirements, sensitivity,
-   and criticality.
+   determining the value, legal requirements, sensitivity,
+   and criticality of the information.
 4) Procedures are in place to ensure that all relevant types of information are
-   classified according to the established information classification scheme.
-5) Roles and responsibilities related to implementing and maintaining the
+   classified according to the established scheme.
+5) Roles and responsibilities related to implementation and maintenance of the
    information classification scheme are clearly defined.
 
 Example TOE criteria (operating effectiveness – how to test):
-1) Extract the Information Classification Policy and verify that it lists each
-   classification level (for example: Public, Internal, Confidential,
-   Restricted) together with clearly defined criteria for assigning those levels.
-2) Review the approved information classification framework and confirm that it
-   explicitly addresses information value, legal/regulatory requirements,
-   sensitivity, and criticality as required by the subcontrol.
-3) Sample asset or information records from relevant systems (for example:
-   file repositories, application records, data inventories) and verify that
-   each record contains a populated classification field that matches one of
-   the defined classification levels and does not use any invalid or undefined
-   values; flag any exceptions.
+1) Extract the Information Classification Policy and ensure the document includes defined
+   classification levels and the criteria for assigning those levels.
+2) Identify the classification levels defined in the policy(e.g., Public, Internal, Confidential, Restricted) 
+   and the corresponding criteria for determining information value, sensitivity, legal/regulatory requirements, and business impact.
+3) Extract the asset or information records provided as evidence (e.g., files, datasets, system entries, application records) and verify that
+   each record contains a populated classification field that corresponds to one of
+   the classification levels defined in the policy.
+4) Flag any asset or information record that is missing a classification value, contains an invalid value not defined in the policy, or
+   contradicts the classification criteria described in the policy.
 
 END OF EXAMPLE
 
