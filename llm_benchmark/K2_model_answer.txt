@@ -2,6 +2,55 @@ import re
 import json
 import re
 import json
+import re
+import json
+
+async def extract_answer_json(raw_text: str):
+    """
+    Extract JSON from the model output.
+
+    Supports (in priority order):
+      1) <answer> ... </answer>
+      2) <answers> ... </answers>
+      3) <JSON> ... </JSON>
+
+    If multiple blocks exist (e.g., multiple runs concatenated),
+    it returns the **last** one.
+    """
+
+    patterns = [
+        r"<answer>(.*?)</answer>",
+        r"<answers>(.*?)</answers>",
+        r"<JSON>(.*?)</JSON>",
+    ]
+
+    match_block = None
+
+    for pattern in patterns:
+        matches = re.findall(pattern, raw_text, re.DOTALL | re.IGNORECASE)
+        if matches:
+            # take the last block (most recent run)
+            match_block = matches[-1].strip()
+            break
+
+    if match_block is None:
+        raise ValueError("No <answer>, <answers>, or <JSON> block found in model output")
+
+    answer_block = match_block
+
+    # Handle double-encoded JSON: "{ \"key\": ... }"
+    if (answer_block.startswith('"') and answer_block.endswith('"')) or \
+       (answer_block.startswith("'") and answer_block.endswith("'")):
+        answer_block = answer_block[1:-1]
+
+    try:
+        data = json.loads(answer_block)
+    except json.JSONDecodeError as e:
+        # for debugging
+        print("FAILED JSON PARSE, RAW BLOCK REPR:", repr(answer_block))
+        raise ValueError(f"Failed to parse JSON inside answer block: {e}") from e
+
+    return data
 
 async def extract_answer_json(raw_text: str):
     """
