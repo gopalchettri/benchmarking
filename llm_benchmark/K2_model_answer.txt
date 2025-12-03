@@ -20,3 +20,27 @@ def extract_answer_json(raw_text: str):
         raise ValueError(f"Failed to parse JSON inside <answer> tag: {e}") from e
 
     return data
+
+import re
+import json
+
+# Assuming 'response' is your ChatResponse object from the image
+full_content = response.message.content
+
+# Regex pattern to capture everything inside <answer> tags
+# re.DOTALL allows the dot (.) to match newlines, which is essential for JSON
+pattern = r"<answer>(.*?)</answer>"
+match = re.search(pattern, full_content, re.DOTALL)
+
+if match:
+    # Extract the string content
+    answer_content = match.group(1).strip()
+    
+    # Optional: Parse it into a Python dictionary since it looks like JSON
+    try:
+        json_data = json.loads(answer_content)
+        print("Extracted JSON:", json_data)
+    except json.JSONDecodeError:
+        print("Extracted Text:", answer_content)
+else:
+    print("No <answer> tags found.")
