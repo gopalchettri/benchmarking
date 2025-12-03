@@ -4,6 +4,47 @@ import re
 import json
 import re
 import json
+import re
+import json
+
+async def extract_answer_json(raw_text: str):
+    """
+    Extract JSON from the model output.
+
+    Looks for blocks of the form:
+      <answer> ... </answer>
+      <json>   ... </json>   (case-insensitive, so <JSON> also works)
+
+    If multiple blocks exist (e.g., multiple runs concatenated),
+    it returns the **last** one.
+    """
+
+    # Regex finds all occurrences of <answer>...</answer> or <json>...</json>
+    # \1 ensures closing tag matches opening tag (answer/json),
+    # IGNORECASE covers <JSON>, <Json>, etc.
+    pattern = re.compile(r"<(answer|json)>(.*?)</\1>",
+                         re.DOTALL | re.IGNORECASE)
+
+    matches = pattern.findall(raw_text)
+    if not matches:
+        raise ValueError("No <answer> or <json>/<JSON> block found in model output")
+
+    # Each match is (tag_name, inner_content); take the last one
+    tag_name, inner = matches[-1]
+    answer_block = inner.strip()
+
+    # Handle double-encoded JSON like "{ \"key\": ... }"
+    if (answer_block.startswith('"') and answer_block.endswith('"')) or \
+       (answer_block.startswith("'") and answer_block.endswith("'")):
+        answer_block = answer_block[1:-1]
+
+    try:
+        data = json.loads(answer_block)
+    except json.JSONDecodeError as e:
+        print("FAILED JSON PARSE, RAW BLOCK REPR:", repr(answer_block))
+        raise ValueError(f"Failed to parse JSON inside {tag_name} block: {e}") from e
+
+    return data
 
 async def extract_answer_json(raw_text: str):
     """
