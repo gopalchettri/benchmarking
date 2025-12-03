@@ -1,5 +1,37 @@
 import re
 import json
+import re
+import json
+
+async def extract_answer_json(raw_text: str):
+    """
+    Extract JSON inside <answer>...</answer> or <JSON>...</JSON>
+    and return it as a Python object.
+    """
+    # 1) Try <answer>...</answer> first
+    match = re.search(r"<answer>(.*?)</answer>", raw_text, re.DOTALL | re.IGNORECASE)
+
+    # 2) If not found, fall back to <JSON>...</JSON>
+    if not match:
+        match = re.search(r"<JSON>(.*?)</JSON>", raw_text, re.DOTALL | re.IGNORECASE)
+
+    if not match:
+        raise ValueError("No <answer> or <JSON> block found in model output")
+
+    answer_block = match.group(1).strip()
+
+    # Optional: handle the double-encoded JSON case
+    if (answer_block.startswith('"') and answer_block.endswith('"')) or \
+       (answer_block.startswith("'") and answer_block.endswith("'")):
+        answer_block = answer_block[1:-1]
+
+    try:
+        data = json.loads(answer_block)
+    except json.JSONDecodeError as e:
+        raise ValueError(f"Failed to parse JSON inside answer block: {e}") from e
+
+    return data
+
 
 def extract_answer_json(raw_text: str):
     """
