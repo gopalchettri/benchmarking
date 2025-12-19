@@ -1,0 +1,83 @@
+version: "1.2"
+owner: "Compliance AI Evaluation"
+last_reviewed: "2025-01-19"
+description: >
+  Production-grade polarity config. Optimized for Regex detection
+  to prevent False Positives. Removed generic triggers.
+
+polarity_definitions:
+
+  negative:
+    description: "Clear evidence of non-compliance, failure, or missing evidence"
+    adherence_band: {min: 0, max: 39}
+    phrases:
+      # Verbs (Action Failures)
+      - "fails to"
+      - "failure to"
+      - "does not meet"
+      - "does not comply"
+      - "unable to verify"
+      
+      # Nouns (Status Failures) - CRITICAL FOR SAFETY
+      - "non-compliant"
+      - "violation"
+      - "breach"
+      - "deficiency"
+      - "material weakness"
+      - "control failure"
+      - "critical gap"
+
+      # Missing Items
+      - "missing"
+      - "not present"
+      - "not available"
+      - "no evidence"
+      - "no documentation"
+      - "not documented"
+      - "insufficient evidence"
+
+      # Ineffective State
+      - "not implemented"
+      - "ineffective"
+      - "inadequate"
+      - "not enforced"
+
+  partial:
+    description: "Control exists but is incomplete or has exceptions"
+    adherence_band: {min: 40, max: 79}
+    phrases:
+      - "partially"
+      - "partial"
+      - "in progress"
+      - "minor gap"
+      - "limited evidence"
+      - "inconsistent"
+      - "not consistently"
+      - "requires improvement"
+      - "needs improvement"
+      - "exception noted"
+      - "risk accepted"
+
+  positive:
+    description: "Full compliance with valid evidence"
+    adherence_band: {min: 80, max: 100}
+    phrases:
+      # Strong Compliance Signals
+      - "fully compliant"
+      - "full compliance"
+      - "compliant with"
+      - "adherence met"
+      - "requirements met"
+      - "no gaps"
+      - "no issues"
+      - "effective"
+      
+      # Specific Documentation (Safer than just "documented")
+      - "adequately documented"
+      - "fully documented"
+      - "controls are documented"
+      - "policy is documented"
+      - "evidence confirms"
+      - "formally approved"
+      - "verified"
+      - "validated"
