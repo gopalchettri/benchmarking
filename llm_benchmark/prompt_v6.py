@@ -85,59 +85,64 @@ Framework style: {framework_hint}
 
 ## EXAMPLES
 
-**Example 1 - UAE IAR (Information Classification)**
+## EXAMPLES
 
-Control: "The entity shall define and implement an information classification scheme based on information value, legal requirements, sensitivity, and criticality"
+**Example 1 - UAE IAR (Information Classification - T1.3.1)**
+
+Control: "The entity shall develop a classification scheme for its information based on information value, legal requirements, sensitivity, and criticality to the entity"
 
 TOD Criteria:
 [
-  {{"id": 1, "criteria": "Verify that a documented policy exists for defining the information classification scheme"}},
-  {{"id": 2, "criteria": "Confirm that there is an approved information classification framework that addresses value, legal requirements, sensitivity, and criticality of information"}},
-  {{"id": 3, "criteria": "Validate that procedures are in place to ensure all relevant types of information are classified according to the established scheme"}},
-  {{"id": 4, "criteria": "Verify that roles and responsibilities related to implementation and maintenance of the information classification scheme are clearly defined"}}
+  {"id": 1, "criteria": "Verify that a documented information classification scheme exists that defines classification levels based on value, legal requirements, sensitivity, and criticality"},
+  {"id": 2, "criteria": "Confirm that the classification scheme specifies the degree of protection required for each classification category"},
+  {"id": 3, "criteria": "Validate that procedures exist to ensure information is classified according to the established scheme"},
+  {"id": 4, "criteria": "Verify that roles and responsibilities for information classification are clearly defined and assigned to asset owners"}
 ]
 
 TOE Criteria:
 [
-  {{"id": 1, "criteria": "Extract the information classification policy and verify that each record contains a classification field that corresponds to one of the classification levels defined in the policy"}},
-  {{"id": 2, "criteria": "Select a sample of information assets (files, databases, system entries) and verify that each has a valid classification value assigned"}},
-  {{"id": 3, "criteria": "Review access control configurations and confirm that permissions align with the assigned classification levels"}},
-  {{"id": 4, "criteria": "Examine classification assignment records and validate that information assets are reviewed and reclassified when their value or sensitivity changes"}}
+  {"id": 1, "criteria": "Extract the classification scheme documentation and verify that information assets contain classification labels corresponding to the defined levels"},
+  {"id": 2, "criteria": "Select a sample of information assets (files, databases, documents) and confirm that each has a valid classification value assigned"},
+  {"id": 3, "criteria": "Review access control configurations and validate that protection mechanisms align with the assigned classification levels"},
+  {"id": 4, "criteria": "Examine classification records and confirm that information classifications are reviewed and updated when their value, sensitivity, or criticality changes"}
 ]
 
-**Example 2 - DESC ISR (Access Control)**
+**Example 2 - UAE IAR (User Registration - T5.2.1)**
 
-Control: "The organization shall implement multi-factor authentication for privileged access to critical systems"
+Control: "The entity shall implement a formal user registration and de-registration procedure to enable assignment of access rights"
 
 TOD Criteria:
 [
-  {{"id": 1, "criteria": "Verify that a documented policy exists requiring MFA for all privileged accounts accessing critical systems"}},
-  {{"id": 2, "criteria": "Confirm that critical systems are identified and documented with their privileged access requirements"}},
-  {{"id": 3, "criteria": "Validate that procedures define the MFA implementation process for privileged users"}}
+  {"id": 1, "criteria": "Verify that documented procedures exist for user registration and de-registration processes"},
+  {"id": 2, "criteria": "Confirm that the procedures require unique user IDs for each person and prohibit sharing of accounts across multiple users"},
+  {"id": 3, "criteria": "Validate that the procedures define immediate revocation of access for users who have changed roles or left the entity"}
 ]
 
 TOE Criteria:
 [
-  {{"id": 1, "criteria": "Inspect MFA configuration settings on critical systems and confirm that MFA is enabled for all privileged accounts"}},
-  {{"id": 2, "criteria": "Select a sample of privileged user accounts and verify that MFA is enforced during authentication"}},
-  {{"id": 3, "criteria": "Review authentication logs and validate that privileged access attempts require and complete MFA verification"}}
+  {"id": 1, "criteria": "Select a sample of recently registered users and verify that each has a unique user ID linked to their identity"},
+  {"id": 2, "criteria": "Review termination records and confirm that access rights were immediately revoked or blocked upon user departure or role change"},
+  {"id": 3, "criteria": "Examine user account records and validate that temporary and inactive accounts are periodically identified and revoked"}
 ]
 
-**Example 3 - UAE IAR (Asset Inventory)**
+**Example 3 - UAE IAR (User Credentials Management - T5.5.3)**
 
-Control: "The entity shall maintain an up-to-date inventory of information assets within the entity"
+Control: "The entity shall implement a system for managing user credentials that enforces quality authentication and secure storage"
 
 TOD Criteria:
 [
-  {{"id": 1, "criteria": "Verify existence of documented asset inventory procedures"}},
-  {{"id": 2, "criteria": "Confirm that roles responsible for maintaining the information asset inventory are defined"}}
+  {"id": 1, "criteria": "Verify that a documented user credentials management system exists with automated credential change procedures"},
+  {"id": 2, "criteria": "Confirm that the system enforces credential strength requirements including minimum length and complexity rules"},
+  {"id": 3, "criteria": "Validate that procedures define maximum credential lifetime and prevent credential reuse"}
 ]
 
 TOE Criteria:
 [
-  {{"id": 1, "criteria": "Obtain the current asset inventory database and verify it contains information assets with identification details"}},
-  {{"id": 2, "criteria": "Select a sample of information assets and confirm they are recorded in the inventory with accurate classification"}}
+  {"id": 1, "criteria": "Review system configuration settings and confirm that credentials are stored in hashed or encrypted format"},
+  {"id": 2, "criteria": "Test the credential change process and verify that the system validates credential strength and enforces quality requirements"},
+  {"id": 3, "criteria": "Examine credential history records and validate that users are forced to change temporary credentials at first log-on and cannot reuse previous credentials"}
 ]
+
 
 ## OUTPUT FORMAT
 
