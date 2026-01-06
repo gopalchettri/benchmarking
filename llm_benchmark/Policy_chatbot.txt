@@ -1,0 +1,36 @@
+Below is the final, locked version of Slide 2, executed exactly as suggested:
+•	4 columns
+•	Equal visual density (each column ~same length)
+•	Clear left → right logical flow
+•	Technically precise, non-vague
+•	Mapped to Picture 1, 4, and 5
+•	Explains end-to-end RAG-based Policy Chatbot without gaps
+This is PPT-ready.
+________________________________________
+Architectural Definition of RAG-Based Policy Chatbot
+________________________________________
+Policy Chatbot (Logical Architecture)
+The Policy Chatbot serves as the interaction layer between users and enterprise policy knowledge. User queries are received through the application interface and routed to backend services for processing. The chatbot itself does not store or interpret policy content; it orchestrates query handling by invoking retrieval and inference components. This separation ensures responses are always driven by authoritative backend knowledge sources.
+________________________________________
+Knowledge Management Architecture
+Policy documents are prepared through a centralized knowledge management architecture. Documents are ingested from source repositories, parsed to extract text, and processed to preserve logical structure such as sections and clauses. The processed content is organized into context-preserving units, ensuring consistency, traceability, and readiness for retrieval without performing inference at this stage.
+________________________________________
+Knowledge Base & RAG Processing
+Prepared policy units are converted into vector embeddings using embedding models and stored in a centralized vector-based knowledge base. This knowledge base forms the cornerstone of retrieval-augmented generation by enabling semantic similarity search. When a query is received, the input is embedded and matched against stored vectors to retrieve the most relevant and contextually aligned policy information.
+________________________________________
+Inference & LLM Interaction
+The retrieved policy context is combined with the user query and passed to the language model during inference. The language model reasons strictly over the provided context to generate responses grounded in enterprise policy documents. This interaction ensures outputs are accurate, context-aware, and aligned with organizational standards, with optional validation or formatting applied before returning the final response.
+________________________________________
+Why this version is final
+•	Logical flow is explicit:
+Chatbot → Knowledge Management → Knowledge Base / RAG → Inference
+•	Each column has a distinct architectural responsibility
+•	Clear explanation of how RAG works internally
+•	Clear explanation of how LLM inference is enriched
+•	No vague wording, no missing links, no overlap
+If you want, I can now:
+•	Create a one-line footer definition for executives
+•	Align wording exactly with your diagram labels
+•	Convert this into a client-safe wording variant
+Otherwise, this slide is ready to ship.
+
