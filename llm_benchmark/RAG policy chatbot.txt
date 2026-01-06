@@ -1,0 +1,13 @@
+Architectural Definition of RAG-Based Policy Chatbot
+________________________________________
+Data Preparation & Ingestion
+Enterprise policy documents such as PDFs and Word files are ingested into the system through a structured data preparation pipeline. These documents are processed by a parser that converts them into clean and standardized text while preserving document structure. This step ensures that policy content is consistently prepared and ready for controlled backend processing, without performing retrieval or inference at this stage.
+________________________________________
+Backend Knowledge Processing
+The backend processes the extracted text to preserve semantic meaning and logical structure. Relevant information is identified using layout detection, section identification, and attribute extraction. The content is then segmented using logical contextual chunking techniques, supported by contextual overlap optimization, to ensure continuity of policy context and prepare the data for semantic representation.
+________________________________________
+Vectorization & Knowledge Base
+The processed policy chunks are converted into vector representations using embedding techniques such as Hugging Face transformers. These embeddings are stored in a centralized vector store, forming the organization’s knowledge base. This vectorized knowledge base enables semantic similarity search and serves as the foundation for retrieval-augmented generation by allowing relevant policy content to be efficiently retrieved.
+________________________________________
+Inference & LLM Interaction
+When a user submits a query, the request is processed through the application layer and converted into an embedding. A similarity search is performed on the vector store to retrieve the most relevant policy context. This retrieved context is combined with the user query during prompt construction and passed to the large language model, which generates responses grounded in enterprise policy knowledge and validated before delivery.
