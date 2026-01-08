@@ -2,7 +2,7 @@ Expert-authored criteria were used during testing to assess semantic alignment a
 
 Why Llama 3.1 8B Is Better Suited for Risk, Audit, and Compliance Use Cases
 
-Intent-preserving reasoning
+Intent-focused reasoning
 Interprets control and policy intent accurately, reducing the risk of misaligned or incomplete criteria.
 
 Strong instruction adherence
