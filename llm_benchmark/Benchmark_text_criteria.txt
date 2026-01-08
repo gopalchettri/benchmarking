@@ -1,0 +1,34 @@
+final - 
+Llama 3.1 8B is recommended at a 60% semantic threshold—the most practical indicator of intent-level alignment—due to its consistent performance across thresholds and iterations. While Falcon 3 10B peaks at a single cutoff, Llama 3.1 8B delivers more stable, structured, and repeatable criteria.
+Intent-focused reasoning – aligns criteria to evaluation logic, not wording
+Strong instruction adherence – maintains scope and structure
+Long-context comprehension – preserves control, sub-controls intent when deriving criteria
+Stable outputs – predictable quality with reduced rework
+Controlled generation – produces structured, well-bounded criteria
+
+Ulta short
+Llama 3.1 8B is recommended at a 60% semantic threshold due to its consistent intent alignment across thresholds and iterations. 
+60% emerged as the most practical indicator of intent-level alignment.
+While Falcon 3 10B peaks at a single cutoff, Llama 3.1 8B delivers more stable, structured, and repeatable criteria—making it the safer choice for production use.
+Why Llama 3.1 8B
+
+Intent-focused reasoning – aligns criteria to evaluation logic, not wording
+Strong instruction adherence – maintains scope and structure
+Long-context comprehension – preserves control, sub-controls intent when deriving criteria
+Stable outputs – predictable quality with reduced rework
+Controlled generation – produces structured, well-bounded criteria
+Production reliability – consistency prioritized over peak scores
+
+
+short
+Expert-authored criteria served as the reference for comparing model-generated criteria using semantic similarity across 60–75% thresholds.
+60% emerged as the most practical indicator of intent-level alignment. While Falcon 3 10B scores slightly higher at this cutoff, Llama 3.1 8B shows more stable performance across thresholds and iterations, reflecting consistent understanding of expert intent rather than optimization toward a single benchmark. This stability enables reliable and repeatable criteria generation at scale.
+
+Why Llama 3.1 8B Is Better Suited for Production
+
+Intent-focused reasoning – aligns criteria with evaluation logic rather than surface wording
+Strong instruction adherence – maintains scope, structure, and parameter discipline
+Long-context comprehension – preserves control, sub-controls intent when deriving criteria
+Stable outputs – delivers predictable quality with reduced rework
+Controlled generation – produces structured, well-bounded criteria
+Production-grade reliability – prioritizes consistent behavior over peak single-point scores
