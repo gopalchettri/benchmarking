@@ -1,0 +1,20 @@
+
+Why Llama 3.1 8B – Key Technical Pointers
+
+
+Efficient inference footprint-Lower hardware and VRAM requirements enable single-GPU inference with better cost–performance efficiency.
+url-https://huggingface.co/blog/llama31 (evidence)
+High throughput performance- Faster token generation and higher tokens-per-second per GPU compared to larger models.
+
+Intent-focused reasoning- Aligns generated questions and criteria to control and sub-control intent, not surface wording.
+
+Strong instruction adherence - Maintains defined question type, scope boundaries, and logical structure consistently.
+
+Hierarchical context retention - Preserves control and sub-control relationships across long-context inputs.
+
+Controlled and bounded generation - Produces structured, well-scoped, and well-bounded questions and criteria.
+
+Output stability - Delivers predictable, low-variance outputs across runs, reducing inconsistency.
+
+Consistency over peak scoring - Selection favors stable semantic behavior across thresholds rather than isolated peak scores.
+
