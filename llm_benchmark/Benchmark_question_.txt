@@ -1,0 +1,22 @@
+Llama 3.1 8B is recommended at the 60% semantic threshold, which is the most practical indicator of question intent alignment. At this threshold, the model consistently generates relevant, well-scoped, and usable questions across iterations.
+While Falcon 3 10B shows peak performance at a single cutoff, Llama 3.1 8B delivers more stable, repeatable question quality, making it better suited for production deployment.
+
+Why Llama 3.1 8B for Question Generation
+
+Intent-aligned question formulation
+Generates questions that accurately reflect the underlying intent and context, rather than surface-level phrasing.
+
+Consistent instructional compliance
+Reliably follows question-generation prompts (e.g., open-ended, scenario-based, clarifying, or follow-up questions).
+
+Context-aware questioning
+Maintains coherence across long inputs, enabling logically sequenced and non-redundant questions.
+
+Structured and well-bounded outputs
+Produces clear, focused, and actionable questions suitable for assessments, interviews, and knowledge validation.
+
+Stable generation quality
+Minimizes variance across runs, ensuring predictable and controllable question outputs.
+
+Efficient 8B parameter footprint
+Enables cost-effective, single-GPU inference while sustaining enterprise-grade question quality.
