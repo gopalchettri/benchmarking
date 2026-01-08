@@ -2,7 +2,7 @@ Phi-4 (14B) is recommended based on the 60% semantic threshold, which is used as
 
 why phi-4
 Hardware: Smaller 14B footprint enables lower GPU memory usage and simpler scaling.
-Model capability: Meets the 60% intent-alignment baseline with near-top semantic accuracy.
+Delivers consistent intent-level accuracy across thresholds with lower hardware requirements than GPT-OSS 20B.
 Token generation speed: Fewer parameters allow faster per-token generation than larger models.
 Inference latency: Reduced model size shortens inference paths, improving response time.
 Inference efficiency: Achieves required intent accuracy without excess computational overhead.
