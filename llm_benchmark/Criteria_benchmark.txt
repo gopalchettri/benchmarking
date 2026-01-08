@@ -8,14 +8,14 @@ Interprets control and policy intent accurately, reducing the risk of misaligned
 Strong instruction adherence
 Consistently enforces scope and parameter discipline, limiting uncontrolled variation in automated assessments.
 
-End-to-end context coverage
+Long-context comprehension
 Processes full policy and regulatory sections, minimizing omissions that could lead to audit gaps.
 
-Predictable and repeatable outputs
-Low variability across runs supports consistent audit outcomes and easier justification.
+Stable outputs
+Low variance across runs delivers predictable quality and reduces manual review and rework.
 
 Controlled and structured generation
-Produces bounded, clearly defined criteria suitable for traceability and review.
+Produces structured, clearly defined criteria suitable for traceability and review.
 
 Production-grade reliability
-Prioritizes consistent behavior over isolated peak scores, supporting defensible decision-making at scale.
+Optimized for consistent behavior at scale, which is more dependable than peak accuracy at a single benchmark point.
