@@ -1,22 +1,29 @@
-Llama 3.1 8B is recommended at the 60% semantic threshold, which is the most practical indicator of question intent alignment. At this threshold, the model consistently generates relevant, well-scoped, and usable questions across iterations.
-While Falcon 3 10B shows peak performance at a single cutoff, Llama 3.1 8B delivers more stable, repeatable question quality, making it better suited for production deployment.
+Recommendation
+Falcon 3 10B and DeepSeek v3.2 achieve the highest semantic similarity scores across all thresholds.
+Llama 3.1 8B and phi-4 show comparable accuracy at the 60% operating threshold, meeting the defined semantic requirement.
+Llama 3.1 8B is recommended as the reference model as it offers the best balance of acceptable semantic accuracy, hardware efficiency, and generation speed at the selected threshold.
 
-Why Llama 3.1 8B for Question Generation
+Why Llama 3.1 8B
+Meets the 60% semantic threshold used for selection
+Comparable accuracy to phi-4 within the same performance tier
+Lower hardware requirements than Falcon 3 10B and DeepSeek v3.2
+Faster token generation and higher throughput per GPU
+Intent-focused questioning – aligns questions to intent, not wording
+Strong instruction adherence – follows instruction reliably
+Context-aware generation – preserves logical flow across questions
+Stable outputs – clear, well-bounded questions
 
-Intent-aligned question formulation
-Generates questions that accurately reflect the underlying intent and context, rather than surface-level phrasing.
 
-Consistent instructional compliance
-Reliably follows question-generation prompts (e.g., open-ended, scenario-based, clarifying, or follow-up questions).
+Recommendation
+Llama 3.1 8B is recommended at the 60% semantic threshold for question generation due to its consistent intent alignment across thresholds and iterations.
+The 60% threshold emerged as the most practical indicator of intent-level question alignment, where questions remain relevant, well-scoped, and usable without overfitting to reference wording.
 
-Context-aware questioning
-Maintains coherence across long inputs, enabling logically sequenced and non-redundant questions.
+While Falcon 3 10B and DeepSeek v3.2 score higher, this reflects closer wording alignment. Llama 3.1 8B delivers more stable, structured, and repeatable questions at the operating threshold, making it the safer choice for production use.
 
-Structured and well-bounded outputs
-Produces clear, focused, and actionable questions suitable for assessments, interviews, and knowledge validation.
-
-Stable generation quality
-Minimizes variance across runs, ensuring predictable and controllable question outputs.
-
-Efficient 8B parameter footprint
-Enables cost-effective, single-GPU inference while sustaining enterprise-grade question quality.
+Why Llama 3.1 8B
+Intent-focused questioning – aligns questions to intent, not wording
+Strong instruction adherence – maintains question type, count, and scope
+Context awareness – preserves logical flow across primary and follow-up questions
+Stable outputs – predictable quality with reduced variation
+Controlled generation – produces clear, well-bounded questions
+Production reliability – consistency prioritized over peak scores
