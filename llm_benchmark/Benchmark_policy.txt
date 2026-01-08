@@ -1,0 +1,8 @@
+Phi-4 (14B) is recommended based on the 60% semantic threshold, which is used as the baseline indicator of intent-level alignment with real user questions. At this baseline, Phi-4 achieves near-equivalent performance to GPT-OSS 20B while operating with a lower model size and cost. This demonstrates that Phi-4 meets the required intent accuracy without the added complexity of larger models, making it the more practical choice for a policy chatbot.
+
+why phi-4
+Hardware: Smaller 14B footprint enables lower GPU memory usage and simpler scaling.
+Model capability: Meets the 60% intent-alignment baseline with near-top semantic accuracy.
+Token generation speed: Fewer parameters allow faster per-token generation than larger models.
+Inference latency: Reduced model size shortens inference paths, improving response time.
+Inference efficiency: Achieves required intent accuracy without excess computational overhead.
