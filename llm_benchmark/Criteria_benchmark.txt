@@ -1,0 +1,21 @@
+Expert-authored criteria were used during testing to assess semantic alignment across models at 60–75% thresholds. A 60% threshold emerged as the most practical indicator of intent-level alignment for compliance-style criteria. While Falcon 3 10B records a slightly higher score at this cutoff, Llama 3.1 8B demonstrates more stable performance across thresholds and iterations, indicating consistent interpretation of control intent rather than optimization toward a single benchmark point. This stability is essential for generating repeatable, defensible criteria in regulated environments.
+
+Why Llama 3.1 8B Is Better Suited for Risk, Audit, and Compliance Use Cases
+
+Intent-preserving reasoning
+Interprets control and policy intent accurately, reducing the risk of misaligned or incomplete criteria.
+
+Strong instruction adherence
+Consistently enforces scope and parameter discipline, limiting uncontrolled variation in automated assessments.
+
+End-to-end context coverage
+Processes full policy and regulatory sections, minimizing omissions that could lead to audit gaps.
+
+Predictable and repeatable outputs
+Low variability across runs supports consistent audit outcomes and easier justification.
+
+Controlled and structured generation
+Produces bounded, clearly defined criteria suitable for traceability and review.
+
+Production-grade reliability
+Prioritizes consistent behavior over isolated peak scores, supporting defensible decision-making at scale.
