@@ -1,4 +1,21 @@
 Recommendation
+Falcon 3 10B and DeepSeek v3.2 achieve the highest semantic similarity scores across all evaluated thresholds.
+Llama 3.1 8B and phi-4 show comparable accuracy at the 60% semantic similarity threshold used for selection, meeting the defined requirement when generated questions are compared against expert-authored ground truth.
+
+Llama 3.1 8B is recommended as the reference model as it meets the required semantic threshold while offering lower hardware requirements and consistent question outputs at the selected threshold.
+
+Why Llama 3.1 8B
+Meets the 60% semantic similarity threshold
+Comparable semantic accuracy to phi-4
+Lower hardware requirements than Falcon 3 10B and DeepSeek v3.2
+Faster token generation and higher throughput per GPU
+Aligns questions to the requirement defined by the control and sub-control
+Maintains the intended question type and scope
+Preserves logical flow across questions
+Produces stable, well-bounded questions
+
+
+Recommendation
 Falcon 3 10B and DeepSeek v3.2 achieve the highest semantic similarity scores across all thresholds.
 Llama 3.1 8B and phi-4 show comparable accuracy at the 60% operating threshold, meeting the defined semantic requirement.
 Llama 3.1 8B is recommended as the reference model as it offers the best balance of acceptable semantic accuracy, hardware efficiency, and generation speed at the selected threshold.
