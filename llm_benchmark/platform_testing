@@ -1,0 +1,124 @@
+Below is a **single-slide structured version** with **two precise lines describing each testing type**.
+It is detailed enough for technical credibility, but still slide-appropriate.
+
+---
+
+# **Platform Testing & Quality Control (QC)**
+
+---
+
+### **Unit Testing**
+
+Validates individual components or functions in isolation.
+Ensures logic correctness and prevents defect propagation early in development.
+
+---
+
+### **Integration Testing**
+
+Verifies interaction between services, modules, and external dependencies.
+Ensures data flow, contracts, and communication behave as expected.
+
+---
+
+### **System / End-to-End (E2E) Testing**
+
+Tests complete workflows across the full platform stack.
+Validates business scenarios under realistic operating conditions.
+
+---
+
+### **API Testing**
+
+Validates request/response contracts, schemas, and error handling.
+Ensures authentication, authorization, and service interoperability integrity.
+
+---
+
+### **Regression Testing**
+
+Re-tests existing functionality after changes or enhancements.
+Prevents reintroduction of previously resolved defects.
+
+---
+
+### **Smoke & Sanity Testing**
+
+Performs quick high-level validation of critical functionalities.
+Confirms build stability before deeper testing cycles begin.
+
+---
+
+### **User Acceptance Testing (UAT)**
+
+Validates the platform against business requirements and user expectations.
+Provides stakeholder confirmation before production deployment.
+
+---
+
+## **Security Testing**
+
+### **Static Application Security Testing (SAST)**
+
+Analyzes source code for vulnerabilities without executing the application.
+Detects insecure coding patterns early in the development lifecycle.
+
+---
+
+### **Dynamic Application Security Testing (DAST)**
+
+Tests running applications for exploitable vulnerabilities.
+Identifies runtime issues such as injection flaws and misconfigurations.
+
+---
+
+### **Dependency Vulnerability Scanning**
+
+Scans third-party libraries and components for known CVEs.
+Reduces supply chain and open-source security risks.
+
+---
+
+### **Penetration Testing**
+
+Simulates real-world attack scenarios against the platform.
+Validates defensive controls and identifies exploitable weaknesses.
+
+---
+
+### **API Security Validation**
+
+Ensures proper authentication, authorization, rate limiting, and input validation.
+Prevents API abuse, data leakage, and unauthorized access.
+
+---
+
+### **IAM & RBAC Validation**
+
+Verifies access controls align with least-privilege principles.
+Ensures role assignments and permissions prevent unauthorized actions.
+
+---
+
+### **Encryption Validation (At Rest & In Transit)**
+
+Confirms data is encrypted using approved cryptographic standards.
+Ensures secure key management and certificate implementation.
+
+---
+
+### **Secrets Management Testing**
+
+Validates secure storage and rotation of credentials and tokens.
+Prevents hard-coded secrets and unauthorized exposure.
+
+---
+
+### **Compliance Validation (ISO 27001 / NIST CSF / etc.)**
+
+Ensures security controls align with regulatory and industry frameworks.
+Provides audit-ready evidence and governance assurance.
+
+---
+
+If you'd like, I can now compress this into a **true single-slide layout grouping similar tests**, because listing all individually may overcrowd a standard presentation slide.
